@@ -1,0 +1,51 @@
+{
+  "name": "elite-credit-ai-marketplace",
+  "owner": {
+    "name": "Luis Cabrera",
+    "email": "luiscabreraf2@gmail.com"
+  },
+  "metadata": {
+    "description": "Marketplace for the Elite Credit AI plugin — forensic credit-report analysis suite for US Latino consumers, powered by the Elite Credit API v3.0 (97-rule audit + 557-chunk legal RAG over MCP HTTP).",
+    "version": "3.0.0"
+  },
+  "plugins": [
+    {
+      "name": "elite-credit-ai",
+      "source": "./",
+      "description": "Forensic credit-report analysis suite. 97 FCRA/FDCPA/Reg F compliance rules with cross-bureau and temporal detection, 557-chunk legal RAG (17 federal laws + 5 state laws), 17 dispute-letter templates, 5 strategic agents, 7 commands, 8 skills.",
+      "version": "3.0.0",
+      "author": {
+        "name": "Luis Cabrera",
+        "email": "luiscabreraf2@gmail.com"
+      },
+      "homepage": "https://github.com/luicabref97/elite-credit-ai-plugin",
+      "repository": "https://github.com/luicabref97/elite-credit-ai-plugin",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "credit-report",
+        "fcra",
+        "fdcpa",
+        "reg-f",
+        "dispute",
+        "forensic-audit",
+        "credit-score",
+        "metro2",
+        "collections",
+        "consumer-rights",
+        "debt-validation",
+        "cross-bureau",
+        "temporal-audit",
+        "cfpb",
+        "latino"
+      ],
+      "tags": [
+        "credit",
+        "fcra",
+        "fdcpa",
+        "consumer-finance",
+        "forensic"
+      ]
+    }
+  ]
+}
