@@ -1,0 +1,29 @@
+# =========================================================================
+# .gitignore for elite-credit-ai-plugin
+# =========================================================================
+
+# ──── OS noise ────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# ──── Editor / IDE ────
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# ──── Claude Code workspace ────
+.claude/
+
+# ──── Build / Deploy artifacts ────
+dist/
+build/
+*.tar.gz
+*.zip
+
+# ──── Plugin output (user-specific, generated at runtime) ────
+output/

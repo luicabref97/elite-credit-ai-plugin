@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "elite-credit-api": {
+      "type": "http",
+      "url": "${ELITE_CREDIT_API_URL}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ELITE_CREDIT_API_KEY}"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "elite-credit-ai",
+  "version": "3.0.0",
+  "description": "Forensic credit-report analysis suite for US Latino consumers. Extracts data from US tri-bureau PDFs, runs 97 FCRA/FDCPA/Reg F compliance rules (cross-bureau and temporal), generates prioritized dispute strategies anchored to a 557-chunk legal RAG (17 federal laws + 5 state laws), produces FCRA-grade dispute letters, and tracks the consumer journey through a Repair / Optimization / Maintenance flow guide. Powered by Claude multi-agent orchestration plus the Elite Credit API (Railway) over MCP HTTP.",
+  "author": {
+    "name": "Luis Cabrera"
+  },
+  "homepage": "https://github.com/luicabref97/elite-credit-ai-plugin",
+  "repository": "https://github.com/luicabref97/elite-credit-ai-plugin",
+  "keywords": [
+    "credit-report",
+    "fcra",
+    "fdcpa",
+    "reg-f",
+    "reg-v",
+    "udaap",
+    "scra",
+    "facta",
+    "ecoa",
+    "tila",
+    "card-act",
+    "efta",
+    "dispute",
+    "forensic-audit",
+    "credit-score",
+    "metro2",
+    "collections",
+    "consumer-rights",
+    "debt-validation",
+    "cross-bureau",
+    "temporal-audit",
+    "cfpb",
+    "latino",
+    "rosenthal",
+    "texas-finance-code",
+    "ny-gbl",
+    "florida-ccpa"
+  ],
+  "license": "MIT"
+}
