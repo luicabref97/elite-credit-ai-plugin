@@ -2,7 +2,7 @@
   "mcpServers": {
     "elite-credit-api": {
       "type": "http",
-      "url": "${ELITE_CREDIT_API_URL}/mcp",
+      "url": "https://elite-credit-api-production.up.railway.app/mcp",
       "headers": {
         "Authorization": "Bearer ${ELITE_CREDIT_API_KEY}"
       }
