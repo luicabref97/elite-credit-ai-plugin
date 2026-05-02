@@ -16,7 +16,7 @@ Spawn the `credit-forensic-analyst` agent to handle the full pipeline autonomous
 2. **Validate**: Verify scores, accounts, personal info, `bureau`, and `client_state` exist (ask user if `client_state` is missing)
 3. **Visualize**: Generate dashboard data → `output/dashboard_data.json`
 4. **Audit**: If Elite Credit API is connected, call `POST /api/audit/run` with the assembled payload (sends `previous_report_data`, `dispute_history`, `other_bureau_reports` only when those files exist). This executes up to 97 server-side rules + 5 cross-bureau inline rules. Otherwise audit manually using FCRA / FDCPA knowledge → `output/audit_report.json`
-5. **Strategize**: If API connected, call `POST /api/rag/search` against the 527-chunk legal RAG for citations and frameworks. Otherwise use general knowledge → `output/dispute_strategies.json`
+5. **Strategize**: If API connected, call `POST /api/rag/search` against the 557-chunk legal RAG for citations and frameworks. Otherwise use general knowledge → `output/dispute_strategies.json`
 6. **Report**: Compile forensic report → `output/forensic_report.md` with cross-bureau and temporal sections (when applicable) and the API's `legal_disclaimer` footer
 
 ## After Completion

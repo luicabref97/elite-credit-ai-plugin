@@ -2,7 +2,7 @@
 name: credit-health-advisor
 description: >
   Interactive credit health advisor that answers questions about credit reports, explains scores,
-  suggests improvements, and educates on consumer rights. Uses the 527-chunk legal RAG (17 federal
+  suggests improvements, and educates on consumer rights. Uses the 557-chunk legal RAG (17 federal
   laws + 5 state laws) for accurate references including 2024-2026 jurisprudence and the current
   medical-debt status. Use for ongoing credit education and Q&A.
 
@@ -49,7 +49,7 @@ If files don't exist, the user has not yet run `/analyze` or `credit-forensic-an
 
 ## KNOWLEDGE BASE
 
-If the Elite Credit API is available (MCP server `elite-credit-api`), call `POST /api/rag/search` for detailed legal references from the **527-chunk knowledge base** (rate limit 120/min). Useful category filters by question type:
+If the Elite Credit API is available (MCP server `elite-credit-api`), call `POST /api/rag/search` for detailed legal references from the **557-chunk knowledge base** (rate limit 120/min). Useful category filters by question type:
 
 | Question type | Recommended categories |
 |---------------|------------------------|

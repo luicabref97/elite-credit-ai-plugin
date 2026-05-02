@@ -4,7 +4,7 @@
 > Powered by the Elite Credit API v3.0 (97-rule audit + 557-chunk legal RAG over MCP HTTP).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](./.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](./.claude-plugin/plugin.json)
 
 ## What it does
 

@@ -201,7 +201,7 @@ To apply v3 to your live plugin:
 3. **Re-install** the plugin in Cowork (or commit/push if your Cowork plugin syncs from git).
 
 4. **Verify with a smoke test**:
-   - Run `/health` (no auth) and confirm `total_rules: 97`, `rag_chunks: 527`, `version: "3.0.0"`.
+   - Run `/health` (no auth) and confirm `total_rules: 97`, `rag_chunks: 557`, `version: "3.0.0"`.
    - Run `/search-law "ley FCRA reglas de validacion"` and confirm chunks come back from `LEGAL_INTERPRETATION` and `JURISPRUDENCE` categories.
    - Upload a credit report and run `/analyze`. Confirm the audit report contains `unique_rules_fired`, `total_registered_rules: 97`, and `legal_disclaimer`.
    - If you uploaded 2+ bureau reports, confirm the report has cross-bureau anomalies (DOFD_DISCREPANCY_CROSS_BUREAU, etc.).
@@ -308,6 +308,6 @@ The original folder `elite-credit-ai-plugin (no modificar - solo para contexto)/
 While the plugin lives in `elite-credit-ai-plugin-v3/`, two vault files were added/created to support Phase B and Phase B+:
 
 - `vault/metodologia/master-agent-flow-guide.md` — 27 H2 sections (~10,500 words). The strategic playbook consumed by `flow-router` and `phase-tracker` agents via `/api/rag/search` (`source: MET-FLOW-GUIDE`).
-- RAG corpus grew from 527 to 554 chunks after sync. Categories: STRATEGY now 144 (+27 from flow guide).
+- RAG corpus grew from 527 to 557 chunks after sync (Phase B+ flow guide + minor expansions). Categories: STRATEGY now 144 (+27 from flow guide).
 
 These vault changes do NOT need to be manually applied to your Cowork plugin — they are server-side, served through the API endpoints. As soon as the API is deployed with the updated `data/elite_credit_ai_rag_v2.json`, the plugin (any version that calls `/api/rag/search`) automatically benefits.

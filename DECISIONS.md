@@ -26,7 +26,7 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
   1. API-only plugin — rejected: unusable without server deployed
   2. Embed RAG data in plugin — rejected: exposes proprietary IP to anyone who installs the plugin
   3. GitHub private repo for data — rejected: data still enters Claude's context, doesn't protect IP
-- **Rationale:** Dual-mode lets the plugin work immediately for demos or general use, while the API adds proprietary depth (now 527 RAG chunks and 97 programmatic rules in v3) for production. Both modes always have Claude's general FCRA/FDCPA knowledge as baseline.
+- **Rationale:** Dual-mode lets the plugin work immediately for demos or general use, while the API adds proprietary depth (now 557 RAG chunks and 97 programmatic rules in v3) for production. Both modes always have Claude's general FCRA/FDCPA knowledge as baseline.
 - **Status:** Accepted (carried over from v1)
 
 ### ADR-002: MCP HTTP transport for API connection
