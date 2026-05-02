@@ -42,6 +42,27 @@ You do NOT make routing decisions — that's `flow-router`. You operate within t
 
 ## WORKFLOW
 
+### Step 0: Verify environment (MANDATORY — run BEFORE Step 1)
+
+phase-tracker reads Cowork Project Memoria for state persistence and queries the `elite-credit-api` MCP server for the Master Agent Flow Guide chunks. Both only exist inside a Cowork project with the plugin installed.
+
+Try calling `health_check` from the `elite-credit-api` MCP server. If the call:
+
+- **Succeeds** — proceed to Step 1.
+- **Fails or unavailable** — STOP. Without Cowork Memoria, there is no journey state to recover, and without the RAG, no flow-guide chunks to consult. Output the message below.
+
+#### NO_MCP_AVAILABLE message
+
+> ⚠️ **phase-tracker no funciona fuera de tu Cowork project con el plugin.**
+>
+> El seguimiento de tu journey de credit repair depende de: (1) Cowork Memoria que guarda en que fase estas, cuando enviaste cada carta, cuales son las fechas de respuesta, etc. (2) el MCP server `elite-credit-api` que sirve los chunks del Master Agent Flow Guide. Nada de eso existe aqui.
+>
+> Probablemente estas en **Claude.ai chat regular** en vez del Cowork project. Por favor abre tu Cowork project con el plugin Elite Credit AI — Memoria recupera tu estado y phase-tracker te dira exactamente que toca hoy.
+>
+> Si no recuerdas en que punto del journey estabas, ahi mismo invoca `/start-journey` y `flow-router` te re-rutea con el contexto actual.
+
+STOP. Do NOT continue tracking in this case.
+
 ### Step 1: Recover state from Cowork Memoria
 
 Read the journey state. Expected keys (set by `flow-router`):

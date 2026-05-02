@@ -1,10 +1,27 @@
 # Elite Credit AI Plugin
 
-> Forensic credit-report analysis suite for Claude Cowork — built for US Latino consumers.
+> Credit-journey suite for Claude Cowork — built for US consumers (with a Latino focus).
+> Covers the full arc: forensic **repair** when there are FCRA/FDCPA anomalies, score **optimization** when the report is clean, and **maintenance + financial education** for ongoing use.
 > Powered by the Elite Credit API v3.0 (97-rule audit + 557-chunk legal RAG over MCP HTTP).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](./.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-3.0.3-blue.svg)](./.claude-plugin/plugin.json)
+
+## Where to use this plugin
+
+The plugin's agents, skills, and commands only load when Claude has access to the plugin's files **and** the `elite-credit-api` MCP connector is reachable. That happens in exactly two contexts:
+
+| Context | Works? | Notes |
+|---------|--------|-------|
+| **Cowork project** with this plugin installed and the `elite-credit-api` connector in "Conectado" state | ✅ Recommended | Full pipeline: agents, skills, commands, MCP-backed audit + RAG, Cowork Memoria + Programado for journey continuity. |
+| **Claude Code CLI** with `.mcp.json` configured locally | ✅ Developer / fallback | Useful for plugin development, batch work, or when Cowork is not the right surface. |
+| **Raw Claude.ai chat** (no project) | ❌ No plugin loading | Claude will answer from general training knowledge and may unintentionally fabricate plugin specifics. Switch to your Cowork project. |
+| **Cowork project without this plugin installed** | ❌ Not connected | Install the plugin from the marketplace first (see [Install](#install)). |
+| **Cowork project with the plugin but the MCP connector offline** | ⚠️ Degraded | Each agent runs an `Step 0: Verify environment` check that catches this and prints a redirect message instead of fabricating an audit. Reconnect via Conectores → `elite-credit-api` → Instalar. |
+
+**If you find yourself in raw Claude.ai chat and want to use this plugin's capabilities,** open the Cowork project where you installed it. Project Instructions in that project should follow [`PROJECT_INSTRUCTIONS_TEMPLATE.md`](./PROJECT_INSTRUCTIONS_TEMPLATE.md), which sets the project up to default to plugin agents/commands instead of improvising.
+
+For an extra layer of protection, consider adding a [Memory entry](./PROJECT_INSTRUCTIONS_TEMPLATE.md#user-side-setup--also-recommended) on your Claude.ai account that redirects credit-related questions away from raw chat and into your Cowork project.
 
 ## What it does
 
@@ -114,9 +131,18 @@ The plugin pairs an *execution* layer (skills + agents that perform individual t
 
 This is why a returning user does not need to re-explain anything — `phase-tracker` already knows where they were.
 
-## Operational policy: CFPB-from-Round-1
+## Operational policy: dispute-paired filings (context-dependent)
 
-Every bureau dispute (Round 1) is paired with a simultaneous CFPB complaint. The vault, agents, and dispute-letter templates encode this consistently. The reasoning is documented in `vault/metodologia/secuencias-disputa.md` (server-side in the API). Personal-information corrections and goodwill letters are exempt — the agents handle these exceptions automatically.
+For most bureau-dispute Round-1 letters that target reporting accuracy (charge-offs, collections, late payments, mixed file, cross-bureau, temporal anomalies), the plugin pairs the certified-mail letter with a simultaneous CFPB complaint. The reasoning is documented in `vault/metodologia/secuencias-disputa.md` (server-side in the API), and the `dispute-strategist` and `dispute-letter-generator` apply it automatically when appropriate.
+
+**Important:** this is NOT a blanket policy. The agents skip the CFPB pairing for:
+
+- **Personal-information corrections** (name, address, employer) — these are clerical fixes, not regulatory pressure points.
+- **Goodwill letters** — opening a CFPB case destroys the goodwill relationship, so they are mutually exclusive paths.
+- **FCRA 605B identity-theft blocks** — the 4-business-day block runs first; CFPB only fires if the block fails.
+- **Pure cease-and-desist letters** — operational FDCPA action, not a dispute.
+
+The decision logic lives inside the agents and the strategist skill, not in user-facing project instructions. Use the plugin's outputs as-is rather than imposing a uniform "always file CFPB" rule from outside.
 
 ## Architectural decisions
 
