@@ -1,7 +1,7 @@
 {
   "name": "elite-credit-ai",
-  "version": "3.0.3",
-  "description": "Forensic credit-report analysis suite for US Latino consumers. Extracts data from US tri-bureau PDFs, runs 97 FCRA/FDCPA/Reg F compliance rules (cross-bureau and temporal), generates prioritized dispute strategies anchored to a 557-chunk legal RAG (17 federal laws + 5 state laws), produces FCRA-grade dispute letters, and tracks the consumer journey through a Repair / Optimization / Maintenance flow guide. Powered by Claude multi-agent orchestration plus the Elite Credit API (Railway) over MCP HTTP.",
+  "version": "3.0.4",
+  "description": "Credit-journey suite for US consumers (Latino focus). Covers the full arc: forensic repair when there are FCRA/FDCPA/Reg F anomalies, score optimization, and maintenance + financial education. Bilingual ES/EN intake, multi-select goals, deep audit of tri-bureau PDFs, prioritized dispute strategies, FCRA-grade dispute letters with personalized hardship narrative, dual output (technical forensic report + plain-language consumer dashboard), and journey continuity across sessions via Cowork Memoria.",
   "author": {
     "name": "Luis Cabrera"
   },

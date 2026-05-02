@@ -229,3 +229,13 @@ Create `output/dispute_tracking.md` with a tracking table that has BOTH `certifi
 - ALWAYS recommend `congelamiento-bureaus-secundarios` template + `dispute-lexisnexis` as a setup phase BEFORE primary disputes when the user has not done so already.
 - For Spanish-speaking consumers, generate letters in English (bureaus require English) but include a Spanish summary at the top so the consumer understands what they're sending.
 - Each `suggested_action` from the audit already carries the educational disclaimer prefix — relay it intact in the cover letter or summary that goes WITH the letter, not duplicated inside the dispute itself.
+- **Read `output/account_context.json` if it exists.** It is produced by `credit-forensic-analyst` Step 7 and contains user-provided context per account: hardship narrative, communications received from collectors, payment attempts, documents kept. Use this to enrich letter narrative (FDCPA validation timing, hardship framing, evidence references). Missing context never blocks letter generation.
+
+## COPY HYGIENE (NEVER SHOW INTERNAL MECHANICS TO THE USER)
+
+This is non-negotiable for user-facing chat output (the cover letters and the chat summary that goes WITH each letter — the formal letter content itself does cite statutes for legal effect):
+
+- **NEVER** mention rule counts ("97 rules"), chunk counts ("557 chunks"), evaluation totals, engine versions, MCP namespaces, JSON-RPC details, HTTP status codes.
+- **NEVER** use internal anomaly rule identifiers (e.g., `DOFD_DISCREPANCY_CROSS_BUREAU`) in user-facing chat. Translate to plain language. The formal letters can and should cite specific statute sections (FCRA §605(a)(4), FDCPA §1692g, etc.) because that is the letter's legal weapon — but the chat summary explaining the letter to the user uses plain language.
+- **NEVER** confirm letter generation with API status ("API online — 557 chunks · 97 rules · v3.0.0"). The user wants their letters and the cover-page summary, not the API metadata.
+- The user receives the formal letter, a plain-language summary of what it argues, and clear mailing instructions. Technical depth stays in the letter body where it serves a legal purpose.

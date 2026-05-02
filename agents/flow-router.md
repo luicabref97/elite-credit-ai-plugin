@@ -66,6 +66,20 @@ Try calling `health_check` from the `elite-credit-api` MCP server. If the call:
 
 STOP. Do NOT continue routing in this case.
 
+### Step 0.7: Ask language preference (BEFORE rendering any form or generating any user-facing text)
+
+Before showing the intake form or any other user-facing copy, ask the user which language they prefer. Default is Spanish (the plugin's primary audience is US Latino consumers); always offer English as the alternative.
+
+Render a minimal 2-button prompt (NOT the full intake form yet):
+
+> Antes de empezar, ¿en qué idioma prefieres trabajar conmigo? / Before we start, which language do you prefer?
+>
+> [ Español (recomendado) ] [ English ]
+
+Wait for the user's response. Save the choice into Cowork Memoria as `language: "es" | "en"`. From this point on, every form label, every helper text, every status message, and every routing communication is rendered in that language.
+
+If Memoria from a prior session already includes `language`, skip this step and reuse the stored value.
+
 ### Step 1: Recover existing context (if any)
 
 Read Cowork Project Memoria. If the user has been in a journey already, you should see something like:
@@ -88,9 +102,9 @@ Read Cowork Project Memoria. If the user has been in a journey already, you shou
 
 **If no context exists:** continue to Step 2 — this is a fresh routing.
 
-### Step 2: Run the Entry Decision Tree
+### Step 2: Render the intake form
 
-Search the RAG for the Decision Tree chunk:
+Search the RAG for the Decision Tree chunk so you have the underlying routing logic loaded:
 
 ```
 POST /api/rag/search
@@ -101,14 +115,35 @@ POST /api/rag/search
 }
 ```
 
-The first result should be `MET-FLOW-GUIDE-002` (Entry Decision Tree). Read it. The questions are:
+The first result should be `MET-FLOW-GUIDE-002` (Entry Decision Tree). Use that internally to inform routing, but do NOT show its mechanics to the user.
 
-1. **¿Tiene reportes de credito?** — If no, educate on `annualcreditreport.com` (per FACTA — gratis semanalmente) and STOP. Cannot route without reports.
-2. **¿Cuántos buros?** — 1 / 2-3 / + previous report. This determines whether cross-bureau and temporal analysis are available.
-3. **Run Layer 2 audit** (Step 3 below) BEFORE asking about score — score alone is misleading without anomaly context.
-4. **Score actual (post audit)** — < 670 / 670-799 / 800+
-5. **Anomalies HIGH detected?** — if yes, Flow A regardless of score.
-6. **Goal explícito?** — capture target_score, target_date, goal_type (mortgage, auto, business, etc.).
+Render a Cowork intake form with the following fields (all labels and helper text in the user's chosen language from Step 0.7). The values stored in Memoria use the canonical English keys shown in the table; the rendered labels are translated.
+
+| # | Field | Type | Required | Options / placeholder (canonical) |
+|---|-------|------|----------|------------------------------------|
+| 1 | Primary goal(s) | **multi-select checkboxes** | Yes (≥1) | `buy_home` / `buy_car` / `business_credit` / `improve_score` / `build_from_scratch` / `maintain_monitor` / `other` (free text in field 2) |
+| 2 | Tell me your situation in your own words | **textarea** | No | ES placeholder: "Cuéntame con tus palabras qué quieres lograr, qué pasó, o qué te preocupa." EN: "Tell me in your own words what you want to achieve, what happened, or what worries you." |
+| 3 | Approximate credit score | **radio (single-select)** | Yes | `below_580` / `580_619` / `620_659` / `660_699` / `700_739` / `740_plus` / `dont_know` |
+| 4 | What's on your report | **multi-select checkboxes** | Yes (≥1) | `dont_know_analyze_for_me` / `collections` / `late_payments` / `charge_offs` / `bankruptcy` / `repossession` / `foreclosure` / `too_many_inquiries` / `identity_theft` / `clean_report` |
+| 5 | State you live in | **dropdown** | Yes | All 50 US states + DC + Puerto Rico + other US territories. Pre-fill if a prior session captured it. |
+| 6 | Upload your credit report PDF | **file upload** | No (but strongly recommended) | ES helper: "Si subes tu reporte, mi análisis es mucho más profundo y específico. Si todavía no lo tienes, puedes descargar los 3 buros gratis en annualcreditreport.com — si no sabes cómo, dime y te guío paso a paso." EN: same idea, translated. |
+| 7 | Anything else you want to share | **textarea** | No | ES placeholder: "Tu score exacto si lo sabes, nombres de cuentas, balances, situación financiera, o cualquier contexto que creas relevante." EN: equivalent. |
+
+Buttons: **Skip** (continues with whatever the user filled, even if nothing) and **Start journey** (primary CTA, in user's brand color).
+
+**Coexistence rules** for multi-select fields:
+
+- Field #1 (goals): freely combinable. A user can mark "Buy a home" + "Improve score" + "Business credit" simultaneously. All selections are stored as an array.
+- Field #4 (negatives): the option **"I don't know — analyze my report and tell me"** is **coexistente**, not exclusive. A user CAN mark "I have charge-offs" AND "I don't know what else" at the same time. The routing logic uses the UNION of self-reported items + audit findings (Step 3).
+
+**Field #4 routing behavior:**
+
+- User selected only "I don't know" → ignore self-report; routing depends ENTIRELY on the audit findings produced in Step 3. If no PDF uploaded, ask for one (or for at least basic situation context) before routing.
+- User selected specific items + "I don't know" → routing uses the UNION (self-reported ∪ audit-detected).
+- User selected specific items only → routing uses (self-reported ∪ audit-detected) — the audit always supplements user input.
+- User selected "None / clean report" alone (no PDF) → tentative Flow B / Flow C routing; if a PDF is later uploaded, re-run the audit and re-route if HIGH anomalies appear.
+
+**After form submission**, capture the answers into Memoria as a `intake_form` object, then proceed to Step 3 (audit). Do NOT acknowledge the form submission with API metadata — see the post-submit guidance in Step 3.
 
 ### Step 3: Run Layer 2 audit (REQUIRED before declaring routing)
 
@@ -128,7 +163,29 @@ Authorization: Bearer <ELITE_CREDIT_API_KEY>
 
 If the user has NOT yet uploaded reports, spawn the `credit-forensic-analyst` agent to extract them first, then come back here. Do NOT route blind.
 
-Read the response. Note the `unique_rules_fired` count and the severity distribution.
+Read the response. Note the `unique_rules_fired` count and the severity distribution **for your own orchestration only**.
+
+**Post-submit confirmation message — copy hygiene MANDATORY:**
+
+After the form is submitted and while the audit is running, show the user a friendly status message. NEVER expose API metadata (rule counts, chunk counts, version strings, MCP namespaces, JSON-RPC details, HTTP statuses) in user-facing copy. The user does not benefit from those numbers and many will be confused or distracted by them.
+
+Use these templates (in the user's chosen language):
+
+ES:
+> ✅ Listo, ya tengo tu información. Voy a analizar tu reporte y prepararte un diagnóstico personalizado. Toma unos segundos...
+
+EN:
+> ✅ Got it, I have your information. Analyzing your report and preparing a personalized diagnosis now. This takes a few seconds...
+
+**Forbidden** (do NOT generate any of these patterns):
+
+- "API online — 557 chunks · 97 rules · v3.0.0"
+- "The 97-rule engine ran 789 evaluations and flagged 13 items"
+- "MCP server health_check returned ok"
+- "Calling tools/call with arguments"
+- Any literal JSON envelope or HTTP status code
+
+If you need to acknowledge that the audit is running, use the friendly templates above and nothing else.
 
 ### Step 4: Apply the Decision Tree to declare routing
 
@@ -201,26 +258,72 @@ The `transitions` array is APPEND-ONLY. Every time a phase changes (Phase 1 → 
 
 ### Step 7: Communicate the routing to the user
 
-Present clearly, in the user's language (Spanish or English):
+Present clearly in the user's chosen language. Translate flow names and friendly grades. **Never mention rule counts, chunk counts, or evaluation totals.**
+
+ES template (if `language=es`):
 
 ```
-Diagnostico inicial:
-- Score actual: <number> ([grade])
-- Anomalias detectadas: <unique_rules_fired> tipos en <total_anomalies> cuentas (de 97 reglas examinadas)
+Tu diagnóstico inicial:
+
+- Tu score: <number> (<friendly_grade>)
 - Estado: <client_state>
-- Goal: <goal description>
+- Lo que buscas: <goal description in user's words>
 
-Te ubico en: Flow <A/B/C> — Phase <N>: <phase name>
+Encontré <total_anomalies> problemas en <num_affected_accounts> de tus cuentas que necesitan atención.
 
-Lo que vamos a hacer en esta fase (semanas X-Y):
-1. <first action from phase chunk>
+Vamos a empezar en: <FlowName_friendly> — Etapa <N>: <phase name in plain language>
+
+Lo que haremos en esta etapa (durante <duration_weeks> semanas):
+1. <first action in plain language>
 2. <second action>
 3. <third action>
 
-Esto es educativo, no asesoria legal. Para acciones legales formales (demanda, etc.), consulta NACA (consumeradvocates.org).
+Esperamos un cambio de <expected_impact_range> en tu score si todo sale como debería.
 
-Quieres empezar con la primera accion ahora?
+Esto es educativo, no asesoría legal. Si en algún momento decides demandar o necesitas un abogado, consulta NACA en consumeradvocates.org — es un directorio gratuito de abogados especialistas en derechos del consumidor.
+
+¿Empezamos con la primera acción ahora?
 ```
+
+EN template (if `language=en`):
+
+```
+Your initial diagnosis:
+
+- Your score: <number> (<friendly_grade>)
+- State: <client_state>
+- What you're aiming for: <goal description>
+
+I found <total_anomalies> issues across <num_affected_accounts> of your accounts that need attention.
+
+We're starting in: <FlowName_friendly> — Stage <N>: <phase name in plain language>
+
+What we'll do in this stage (over <duration_weeks> weeks):
+1. <first action in plain language>
+2. <second action>
+3. <third action>
+
+Expected score change: <expected_impact_range> if things go as planned.
+
+This is educational, not legal advice. If you ever decide to sue or need an attorney, check NACA at consumeradvocates.org — a free directory of consumer-law specialists.
+
+Ready to start with the first action?
+```
+
+**Translation tables (use these consistently):**
+
+| Internal value | ES friendly | EN friendly |
+|----------------|-------------|-------------|
+| `POOR` (score <580) | "Necesita trabajo" | "Needs work" |
+| `FAIR` (580-669) | "Aceptable" | "Fair" |
+| `GOOD` (670-739) | "Bueno" | "Good" |
+| `VERY_GOOD` (740-799) | "Muy bueno" | "Very good" |
+| `EXCELLENT` (800+) | "Excelente" | "Excellent" |
+| Flow `A` | "Reparación" | "Repair" |
+| Flow `B` | "Optimización" | "Optimization" |
+| Flow `C` | "Mantenimiento" | "Maintenance" |
+
+`<expected_impact_range>` — pull from the audit + the flow-guide phase chunk (e.g., "+80 a +150 puntos en 12-18 semanas"). Do NOT invent a range; only use what the flow guide and audit support.
 
 ### Step 8: Hand off to the next agent / wait for user
 
@@ -249,3 +352,11 @@ After handoff, set up `phase-tracker` to monitor progress (it activates on next 
 - ALWAYS apply Latino overlay when `client_state` is in CA / TX / NY / FL / IL / AZ / NM / NV, or user mentions ITIN / immigration / Spanish-only.
 - NEVER duplicate the disclaimer prefix that the API already adds to `suggested_action`. Relay the top-level `legal_disclaimer` once at the end.
 - If the user pushes back on the routing ("but I want to optimize NOW even though I have negatives"), respect the autonomy but explain the trade-off the flow guide warns about. Document the override in Memoria.
+- **NEVER show internal mechanics to the user.** This is copy hygiene and is non-negotiable:
+  - Rule counts ("97 rules", "789 evaluations") — for your orchestration, never for the user.
+  - Chunk counts ("557 chunks", "13 categories") — internal context only.
+  - Engine / API versions ("v3.0.0", "engine_version", `total_registered_rules`) — never user-facing.
+  - MCP namespaces ("elite-credit-api", "tools/call", "health_check") — never user-facing.
+  - Internal anomaly identifiers ("DOFD_DISCREPANCY_CROSS_BUREAU", `rule_name`) — translate to plain language before showing.
+  - JSON-RPC details, HTTP status codes, response schemas — never user-facing.
+  - The user sees outcomes and plain-language explanations. The technical "how" stays inside your reasoning.

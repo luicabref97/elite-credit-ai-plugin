@@ -155,31 +155,108 @@ Call `POST /api/rag/search` (rate limit 120/min, top_k 8-10 per query). Useful q
 
 Generate prioritized dispute strategies P0-P4 (delegate detailed work to dispute-strategist skill). Save to `output/dispute_strategies.json`.
 
-### Step 5: Report
+### Step 5: Technical forensic report
 
-Compile all outputs into `output/forensic_report.md` with:
+Compile all outputs into `output/forensic_report.md`. This file is the **technical report** intended for credit-repair professionals or for the user when they want depth — it can contain section numbers, statute citations, and rule names. It must NOT advertise API internals (do not write "789 evaluations", "97-rule engine", "v3.0.0", chunk counts, MCP namespaces) — those numbers belong inside your reasoning, not in the deliverable.
 
-- Executive Summary (Consumer, Report Date, Bureaus, Scores, Anomalies count by severity, Top 3 issues, Priority actions, Estimated score impact, **`unique_rules_fired` of `total_registered_rules`** scope statement)
+Sections:
+
+- Executive Summary (Consumer, Report Date, Bureaus, Scores, total anomalies by severity, Top 3 issues, Priority actions, Estimated score impact in a realistic range)
 - Score Overview
 - Factor Analysis
 - Account Inventory
-- Anomaly Findings (grouped by category)
-- **Cross-bureau Findings** — only when other_bureau_reports was sent
-- **Temporal Findings** — only when previous_report_data was sent
-- Dispute Strategies (P0-P4 with legal basis, evidence required, timeline) — each P0/P1/P2 strategy notes that **CFPB filing is paired from Round 1** per operational policy (see `vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1`)
-- Timeline (week-by-week action plan) — Day 1 actions include both certified-mail and CFPB online filing simultaneously
+- Anomaly Findings (grouped by category — date / balance / status / etc.)
+- **Cross-bureau Findings** — only when `other_bureau_reports` was sent
+- **Temporal Findings** — only when `previous_report_data` was sent
+- Dispute Strategies (P0-P4 with legal basis, evidence required, timeline). For Round-1 actions targeting reporting-accuracy anomalies, note that the bureau letter is paired with a simultaneous CFPB filing (`vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1`). Do NOT advertise CFPB pairing for goodwill, FCRA 605B identity-theft blocks (block first), personal-information corrections, or pure cease-and-desist letters.
+- Timeline (week-by-week action plan)
 - Legal Citations
 - **Legal Disclaimer Footer** — relay the API's `legal_disclaimer` text once
+
+### Step 6: Consumer-friendly dashboard
+
+In ADDITION to the technical `forensic_report.md` from Step 5, produce a separate `output/consumer_dashboard.md` written for the END USER (not credit-repair pros). Same data, plain language, 8th-grade reading level, in the user's chosen language (`memoria.language`).
+
+**Critical copy rules for `consumer_dashboard.md`:**
+
+- NO rule names, NO chunk counts, NO API versions, NO Metro2 codes, NO internal anomaly identifiers. Translate `DOFD_DISCREPANCY_CROSS_BUREAU` → "Tu fecha de mora aparece diferente en cada buró", `BALANCE_EXCEEDS_CREDIT_LIMIT` → "Tu balance reportado supera el límite", etc.
+- NO FCRA / FDCPA / Reg F section numbers in the main body. If a citation is essential, hide it in a small "Ver detalles legales" expandable at the end.
+- Friendly headings, second person (tú / tu reporte / tus cuentas).
+- Reframe negatives as fixable: "Tu banco reportó X — no debería estar así. Vamos a corregirlo." Never blaming, never alarming.
+- Bilingual selector — the dashboard ships in `memoria.language` but should mark a `language: es|en` field at the top so a future visual renderer can switch.
+
+**Required sections for `consumer_dashboard.md`:**
+
+1. **Saludo + 3 score cards** — greeting + per-bureau score with friendly grade ("Necesita trabajo" / "Aceptable" / "Bueno" / "Muy bueno" / "Excelente").
+2. **Lo que está pasando con tu crédito** — 2-3 sentence narrative summary in plain language.
+3. **Tus factores de score** — Payment History / Amounts Owed / Length / New Credit / Mix. Each with grade A-F and one-line plain explanation.
+4. **Tus cuentas** — grouped by status: "Al día" / "Necesitan atención" / "En cobranza". Each card: creditor + plain-language status + per-bureau indicator showing whether all 3 buros agree.
+5. **Tus problemas explicados** — list of anomalies. Each with: friendly title, 1-paragraph plain explanation, "Lo que vamos a hacer" 1-line action.
+6. **Tu plan de acción** — timeline (this week / weeks 2-3 / weeks 4-8 / weeks 8-18) with concrete steps.
+7. **Score esperado** — realistic range with "si todo sale como debería".
+8. **Disclaimer corto** at bottom: educational, not legal advice; NACA referral.
+
+`consumer_dashboard.md` is the input that a future visual dashboard (designed separately in `skills/ui-ux-credit/`) will consume. For now it ships as human-readable markdown.
+
+### Step 7: Post-audit context interview
+
+After BOTH `forensic_report.md` and `consumer_dashboard.md` are saved, transition into an interactive Q&A to gather personal context per account. This information lets `dispute-strategist` and `dispute-letter-generator` produce far more personalized and effective letters downstream (hardship narratives, FDCPA timing arguments, evidence references).
+
+**Why this matters:** the audit detects WHAT is wrong on the report. It does not know WHY (job loss, illness, divorce, fraud), what communications the user has received (dunning letters, phone calls, emails, text messages), or what evidence the user may already have. All of that is gold for the dispute layer.
+
+**Interview procedure:**
+
+1. Identify the top 3-5 accounts needing attention (HIGH severity first, then collections / charge-offs / re-aged accounts).
+2. For each account, ask 4-6 short, conversational questions in the user's chosen language. ONE question at a time — not a wall of text.
+3. The user can always say "no recuerdo" / "siguiente" / "next" / "skip" to move on. Never insist.
+4. After every account's questions, give them an optional close: "¿Hay algo más sobre esta cuenta?"
+5. After all top accounts: ask one global question: "¿Hay algo más que crees importante que sepa de tu situación? Cualquier cosa — si estás pasando por algo difícil, si tienes documentos importantes, si pasó algo específico con tu crédito que no te he preguntado."
+
+**Question set per account (in user's language):**
+
+- ¿Has recibido cartas de este acreedor o de algún cobrador? ¿De quién? ¿Aproximadamente cuándo?
+- ¿Te han llamado por teléfono? ¿Con qué frecuencia? ¿De qué número, si recuerdas?
+- ¿Recibiste algún email o mensaje de texto sobre esta cuenta?
+- ¿Recuerdas qué pasó cuando empezaron los problemas con esta cuenta? (pérdida de empleo, enfermedad propia o de familiar, divorcio, mudanza, accidente, robo de identidad, otra razón).
+- ¿Has intentado pagar o negociar? ¿Qué te respondieron?
+- ¿Tienes documentos guardados? (cartas, emails, comprobantes de pago, contratos originales)
+
+**Tone:** friendly and patient. Many users feel embarrassed about credit problems. Frame this as "esto me ayuda a personalizar tu plan y hacer cartas más fuertes", never as accountability or judgement.
+
+**Save answers into `output/account_context.json`:**
+
+```json
+{
+  "Capital One Auto Fin": {
+    "letters_received": "Sí — Midland Credit me mandó cartas en sept 2024",
+    "calls_received": "Sí, ~3 por semana de Midland",
+    "emails_or_texts": null,
+    "hardship_context": "Perdí trabajo en junio 2024",
+    "payment_attempts": "Intenté plan de pago, lo rechazaron",
+    "documents_kept": "Tengo carta original de charge-off de Capital One",
+    "raw_user_text": "<paste exact user text for nuance>"
+  },
+  "_general": {
+    "anything_else": "Tengo problemas de salud que afectaron mis finanzas en 2024."
+  }
+}
+```
+
+Skipped or unknown answers stay `null` or an empty string. The downstream `dispute-strategist` / `dispute-letter-generator` only ENRICH letters when context is present — missing context never blocks a letter.
+
+After Step 7, your audit-side work is done. Hand off to `flow-router` (if not already routed) or to the next agent in the journey (e.g., `dispute-strategist` for Phase 2 disputes).
 
 ## RULES
 
 - NEVER fabricate data — if not in the PDF, don't invent it.
 - ALWAYS extract per-bureau data separately — an account CAN be negative in one bureau and positive in another.
-- ALWAYS include legal citations for every anomaly and strategy.
+- ALWAYS include legal citations in `forensic_report.md` (technical) and OMIT them from the main body of `consumer_dashboard.md` (translate to plain language).
 - ALWAYS save intermediate outputs (extracted, dashboard, audit, strategies, then report).
 - ALWAYS auto-detect multi-bureau and temporal uploads — do not require explicit user instruction to use those features.
-- ALWAYS relay the API's `legal_disclaimer` once at the end of the report.
+- ALWAYS relay the API's `legal_disclaimer` once at the end of `forensic_report.md`. In `consumer_dashboard.md`, use a friendly short disclaimer in plain language.
 - NEVER duplicate a disclaimer at every action — the API already prefixed each `suggested_action`.
-- ALWAYS report `unique_rules_fired` / `total_registered_rules` so the user understands the analysis scope.
-- ALWAYS describe Phase 2 actions as bureau-letter + CFPB-paired from Round 1. CFPB is not classified as escalation in the strategies; it is part of the standard dispute send.
+- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language). Same data, different audiences.
+- ALWAYS run Step 7 (post-audit context interview) after both reports are saved. Skipped questions are fine; what matters is having the channel open.
+- For Phase 2 dispute actions, pair the bureau letter with a CFPB filing **only when the dispute targets reporting accuracy** (charge-offs, collections, late payments, mixed file, cross-bureau, temporal). Do NOT pair CFPB for goodwill letters, FCRA 605B identity-theft blocks (block first; CFPB only if block fails), personal-information corrections, or pure cease-and-desist letters. The `dispute-letter-generator` and `dispute-strategist` apply this nuance per anomaly type.
 - For Latino consumers (`client_state` in CA, TX, NY, FL, etc.), include state-specific citations alongside federal — the RAG returns these chunks automatically.
+- **NEVER show internal mechanics in chat output or in `consumer_dashboard.md`.** Forbidden: rule counts ("97 rules"), chunk counts ("557 chunks"), evaluation totals ("789 evaluations"), engine versions ("v3.0.0"), MCP namespaces, JSON-RPC details, raw Metro2 codes, internal anomaly rule names. Translate everything to plain language. Even in `forensic_report.md` (technical), do not flaunt API metadata — focus on findings.
