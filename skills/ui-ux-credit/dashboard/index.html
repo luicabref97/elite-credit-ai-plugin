@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  DESIGN-MODE entry — for iterating on the dashboard design.
+  Mounts the design canvas (zoom/pan + tweaks panel) with both ES and EN
+  artboards plus the PDF print artboards.
+
+  CONSUMERS DO NOT OPEN THIS FILE. Consumers open runtime.html instead — that
+  one mounts only DirectionA, no design scaffolding.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Elite Credit AI — Consumer Dashboard (DESIGN MODE)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-extras.css">
+  <style>
+    body { background: #050810; }
+    .stage-wrap { width: 100vw; height: 100vh; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="data.js"></script>
+</head>
+<body>
+  <div id="root" class="stage-wrap"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="direction-a.jsx"></script>
+  <script type="text/babel" src="pdf-artboard.jsx"></script>
+
+  <script type="text/babel">
+  const { useState, useEffect } = React;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "lang": "en",
+    "showPrintArtboard": true,
+    "animateScores": true
+  }/*EDITMODE-END*/;
+
+  function App() {
+    const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+    const [animate, setAnimate] = useState(tweaks.animateScores);
+
+    // Replay animations when language changes (so the count-up plays again)
+    useEffect(() => {
+      setAnimate(false);
+      const t = setTimeout(() => setAnimate(tweaks.animateScores), 50);
+      return () => clearTimeout(t);
+    }, [tweaks.lang, tweaks.animateScores]);
+
+    const lang = tweaks.lang;
+    const otherLang = lang === "es" ? "en" : "es";
+
+    return (
+      <>
+        <window.DesignCanvas initialZoom={0.35}>
+          <window.DCSection id="dashboards" title={lang==="en"?"Dashboard":"Dashboard"}>
+            <window.DCArtboard id="dir-a" label={lang==="en"?"Dashboard · ES":"Dashboard · ES"} width={1440} height={3500}>
+              <div data-screen-label="Dashboard · ES">
+                <window.DirectionA lang="es" animate={animate} />
+              </div>
+            </window.DCArtboard>
+            <window.DCArtboard id="dir-a-en" label="Dashboard · EN" width={1440} height={3500}>
+              <div data-screen-label="Dashboard · EN">
+                <window.DirectionA lang="en" animate={animate} />
+              </div>
+            </window.DCArtboard>
+          </window.DCSection>
+
+          {tweaks.showPrintArtboard && (
+            <window.DCSection id="print" title={lang==="en"?"PDF / Print View":"Vista PDF / Impresión"}>
+              <window.DCArtboard id="pdf-es" label="PDF Export · ES · 8.5×11" width={816} height={2400}>
+                <div data-screen-label="PDF · ES">
+                  <window.PDFArtboard lang="es" />
+                </div>
+              </window.DCArtboard>
+              <window.DCArtboard id="pdf-en" label="PDF Export · EN · 8.5×11" width={816} height={2400}>
+                <div data-screen-label="PDF · EN">
+                  <window.PDFArtboard lang="en" />
+                </div>
+              </window.DCArtboard>
+            </window.DCSection>
+          )}
+        </window.DesignCanvas>
+
+        <window.TweaksPanel title="Tweaks">
+          <window.TweakSection title={lang==="en"?"Display":"Pantalla"}>
+            <window.TweakRadio
+              label={lang==="en"?"Default language":"Idioma predeterminado"}
+              value={tweaks.lang}
+              options={[
+                { value: "es", label: "Español" },
+                { value: "en", label: "English" },
+              ]}
+              onChange={v => setTweak("lang", v)}
+            />
+            <window.TweakToggle
+              label={lang==="en"?"Animate score gauges":"Animar medidores"}
+              checked={tweaks.animateScores}
+              onChange={v => setTweak("animateScores", v)}
+            />
+            <window.TweakToggle
+              label={lang==="en"?"Show PDF / Print artboard":"Mostrar artboard PDF"}
+              checked={tweaks.showPrintArtboard}
+              onChange={v => setTweak("showPrintArtboard", v)}
+            />
+          </window.TweakSection>
+        </window.TweaksPanel>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

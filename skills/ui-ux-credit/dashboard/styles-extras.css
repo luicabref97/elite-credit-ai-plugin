@@ -1,0 +1,9 @@
+/* Side widget intro state */
+.dir-a .fsd-side-intro h3 {
+  font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 8px;
+  letter-spacing: -0.3px;
+}
+.dir-a .fsd-side-intro p {
+  font-size: 14px; color: var(--text-mute); line-height: 1.55;
+  margin: 0 0 18px;
+}

@@ -5,7 +5,7 @@
 > Powered by the Elite Credit API v3.0 (97-rule audit + 557-chunk legal RAG over MCP HTTP).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.3-blue.svg)](./.claude-plugin/plugin.json)
+[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](./.claude-plugin/plugin.json)
 
 ## Where to use this plugin
 
@@ -33,6 +33,10 @@ Upload a credit report PDF and get:
 - Personalized dispute letters across **17 templates** (round 1/2/3, debt validation, cease-and-desist, foreclosure, bankruptcy trustee/clerk, summons response, identity theft, etc.)
 - Credit-score education at an 8th-grade reading level — VantageScore 3.0/4.0 + FICO 8/9 aware
 - A `legal_disclaimer` plus a per-action prefix from the API — the agent always presents the audit as educational material, never as legal advice
+- **Three deliverables per audit:**
+  - `output/forensic_report.md` — technical report for credit-repair professionals
+  - `output/consumer_dashboard.md` — plain-language summary as text
+  - `output/dashboard/runtime.html` — **interactive bilingual HTML dashboard** the consumer opens in their browser. Score gauges, factor donut, account cards, anomaly explanations, action timeline, and a "Download PDF" button that produces a print-ready letter-sized PDF via the browser print dialog. Implementation lives in `skills/ui-ux-credit/dashboard/` and is described in `skills/ui-ux-credit/SKILL.md`.
 
 ## Install
 

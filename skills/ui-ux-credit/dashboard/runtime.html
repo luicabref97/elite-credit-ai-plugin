@@ -1,0 +1,75 @@
+<!doctype html>
+<!--
+  RUNTIME ENTRY — what the consumer opens after their audit completes.
+  Mounts ONLY DirectionA. No design canvas, no tweaks panel.
+  Reads ?lang=es|en from the URL (default es).
+  Loads print.css so Cmd+P / Ctrl+P produces a clean PDF.
+  For design-mode iteration, use index.html instead.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Tu reporte de crédito · Elite Credit AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-extras.css">
+  <link rel="stylesheet" href="print.css">
+  <style>
+    html, body { background: #06090f; min-height: 100vh; }
+    .runtime-wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .pdf-render-host { display: none; }
+    @media print { .pdf-render-host { display: block; } }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script src="data.js"></script>
+</head>
+<body>
+  <div id="root" class="runtime-wrap"></div>
+
+  <script type="text/babel" src="direction-a.jsx"></script>
+  <script type="text/babel" src="pdf-artboard.jsx"></script>
+
+  <script type="text/babel">
+    // Read ?lang=es|en from URL; default to "es" (Latino-first audience).
+    const params = new URLSearchParams(window.location.search);
+    const lang = (params.get("lang") === "en") ? "en" : "es";
+    document.documentElement.lang = lang;
+
+    function Runtime() {
+      // Hide the PDF artboard from screen render but include it in DOM so the
+      // print stylesheet can reveal it during browser print.
+      return (
+        <>
+          <window.DirectionA lang={lang} animate={true} />
+          <div className="pdf-render-host">
+            <window.PDFArtboard lang={lang} />
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Runtime />);
+
+    // Wire any "Descargar PDF" / "Print" buttons to window.print().
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest(".btn-ghost, [data-action='print']");
+      if (!t) return;
+      const txt = (t.textContent || "").trim().toLowerCase();
+      if (txt.includes("pdf") || txt.includes("imprim") || txt.includes("print")) {
+        e.preventDefault();
+        window.print();
+      }
+    });
+  </script>
+</body>
+</html>

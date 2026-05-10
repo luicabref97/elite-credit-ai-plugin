@@ -196,7 +196,76 @@ In ADDITION to the technical `forensic_report.md` from Step 5, produce a separat
 7. **Score esperado** — realistic range with "si todo sale como debería".
 8. **Disclaimer corto** at bottom: educational, not legal advice; NACA referral.
 
-`consumer_dashboard.md` is the input that a future visual dashboard (designed separately in `skills/ui-ux-credit/`) will consume. For now it ships as human-readable markdown.
+`consumer_dashboard.md` ships as the text-only fallback (for AI-readable output, Cowork chat preview, and any context where HTML cannot be opened).
+
+### Step 6.5: Emit the interactive HTML dashboard + PDF
+
+In ADDITION to `consumer_dashboard.md`, emit a fully-rendered interactive dashboard at `output/dashboard/`. This is what the consumer actually opens in their browser to see their personalized audit. PDF download is available from the same dashboard via the browser print dialog (Cmd+P / Ctrl+P → Save as PDF).
+
+The reference implementation lives in `skills/ui-ux-credit/dashboard/`. See `skills/ui-ux-credit/SKILL.md` for the full data contract (`window.AUDIT_DATA` shape), component inventory, and brand system.
+
+**Step 6.5a — copy the runtime files** from `skills/ui-ux-credit/dashboard/` into `output/dashboard/`:
+
+```
+output/dashboard/
+├── runtime.html         ← copy as-is (the consumer entry point)
+├── pdf.html             ← copy as-is (direct PDF artboard view)
+├── direction-a.jsx      ← copy as-is (DirectionA component)
+├── pdf-artboard.jsx     ← copy as-is (PDFArtboard component)
+├── styles.css           ← copy as-is
+├── styles-extras.css    ← copy as-is
+├── print.css            ← copy as-is (@media print rules + @page letter)
+├── logos/               ← copy entire folder (equifax.svg, experian.svg, transunion.svg)
+└── data.js              ← GENERATE per the audit (Step 6.5b below)
+```
+
+DO NOT copy: `index.html`, `design-canvas.jsx`, `tweaks-panel.jsx`. Those are design-mode tools, not runtime.
+
+**Step 6.5b — generate `output/dashboard/data.js`** populated with the user's actual audit data. The file structure is `window.AUDIT_DATA = { ... }` followed by the i18n helper functions (`window.t`, `window.getStatusLabel`, `window.getFlagLabel`, `window.getStatusColor`, `window.getGradeColor`).
+
+The helper functions are constants — copy them verbatim from the reference `skills/ui-ux-credit/dashboard/data.js` (the bottom half, after the sample `AUDIT_DATA`).
+
+The `AUDIT_DATA` object is what you build from the audit results. Map source files to dashboard fields:
+
+| Source | Field | Dashboard target |
+|--------|-------|------------------|
+| `output/extracted_data.json` | `personal_info.first_name`, `last_name` | `user.first_name`, `user.last_name` |
+| `output/extracted_data.json` | `personal_info.ssn_last4` | `user.ssn_last4` (NEVER full SSN) |
+| current date or report_date | — | `user.audit_date` (ISO YYYY-MM-DD) |
+| Cowork Memoria | `active_flow`, `current_phase`, `language` | `routing.flow`, `routing.phase`, runtime `?lang=` |
+| flow guide chunk | phase name + duration | `routing.phase_name_es/en`, `routing.duration_weeks` |
+| `output/dashboard_data.json` | `scores[bureau]` | `scores[bureau]` (compute `delta` from previous report if present, else 0) |
+| `output/dashboard_data.json` | `factor_grades[]` | `factor_grades[]` (include both `weight_fico` and `weight_vs`, plus localized `factor_es/en` and `explanation_es/en`) |
+| `output/extracted_data.json` | `accounts[]` | `accounts[]` — for each account compute: `friendly_status_es/en` (plain language), `group` ("good"/"attention"/"collections"), `flags[]` (heuristic display tags from anomalies; see SKILL.md flag list) |
+| `output/audit_report.json` | `anomalies[]` | `anomalies[]` — translate each anomaly's `rule_name` to friendly `title_es/en` per the table in SKILL.md "Anomaly rule_name → friendly title translation table"; produce `explanation_es/en` and `action_es/en` from the anomaly's data; preserve `severity`, `affected[]`, `citation` |
+| `output/dispute_strategies.json` | priorities P0/P1/P2/P3 | bucket into `action_plan.this_week / weeks_2_3 / weeks_4_8 / weeks_8_18` based on priority and timing the strategist provided |
+| `output/account_context.json` (from Step 7) | per-creditor entries | `account_context[creditor]` with all six fields each (letters_received_es/en, calls_es/en, hardship_es/en, docs_es/en) |
+
+For ANY anomaly `rule_name` not covered by the SKILL.md translation table, fall back to:
+- `title_es`: "Hay un problema en esta cuenta"
+- `title_en`: "There's an issue on this account"
+- Use the anomaly's `description` field for `explanation_es/en` (translated to the user's language as needed).
+
+For the `accounts[].flags[]` heuristic computation, set flags based on the audit findings:
+- `cross_bureau_mismatch` if any `*_CROSS_BUREAU` anomaly affects this account
+- `charge_off` if any bureau status is ChargeOff
+- `unvalidated_debt` if account is a Collection AND no recent dispute_history entry shows validation
+- `junk_debt_buyer` if `original_creditor` is set AND creditor name contains a known debt buyer (Midland, LVNV, Portfolio Recovery, etc.)
+- `stale_dofd` if `DOFD_CHANGED` or `RE_AGING` anomaly affects this account
+- `near_obsolescence` if account is older than 6.5 years (close to 7-year FCRA limit)
+- `balance_over_limit` if any bureau balance > limit (and limit is set)
+- `high_utilization` if utilization > 70%
+- `disputed_late` if a late-payment status is disputed in `dispute_history`
+
+**Step 6.5c — tell the user how to open it**, in their chosen `language`:
+
+ES:
+> ✨ Tu dashboard interactivo está listo. Abre `output/dashboard/runtime.html` en tu navegador para ver tu análisis personalizado. Para guardar como PDF: usa el botón "Descargar PDF" dentro del dashboard, o presiona Cmd+P (Mac) / Ctrl+P (Windows) y elige "Guardar como PDF". Si quieres verlo en inglés, agrega `?lang=en` al final de la URL.
+
+EN:
+> ✨ Your interactive dashboard is ready. Open `output/dashboard/runtime.html` in your browser to view your personalized analysis. To save as PDF: use the "Download PDF" button inside the dashboard, or press Cmd+P (Mac) / Ctrl+P (Windows) and choose "Save as PDF". If you'd like to view it in Spanish, add `?lang=es` to the end of the URL.
+
+After Step 6.5, proceed to Step 7 (post-audit context interview).
 
 ### Step 7: Post-audit context interview
 
@@ -255,7 +324,10 @@ After Step 7, your audit-side work is done. Hand off to `flow-router` (if not al
 - ALWAYS auto-detect multi-bureau and temporal uploads — do not require explicit user instruction to use those features.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of `forensic_report.md`. In `consumer_dashboard.md`, use a friendly short disclaimer in plain language.
 - NEVER duplicate a disclaimer at every action — the API already prefixed each `suggested_action`.
-- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language). Same data, different audiences.
+- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive HTML dashboard at `output/dashboard/`. Same data, three different presentations.
+- ALWAYS copy `runtime.html`, `pdf.html`, `direction-a.jsx`, `pdf-artboard.jsx`, `styles.css`, `styles-extras.css`, `print.css`, and `logos/` from `skills/ui-ux-credit/dashboard/` into `output/dashboard/`. SKIP `index.html`, `design-canvas.jsx`, `tweaks-panel.jsx` — those are design-mode tools.
+- ALWAYS generate `output/dashboard/data.js` per the data contract in `skills/ui-ux-credit/SKILL.md`. The five i18n helper functions (`window.t`, `window.getStatusLabel`, `window.getFlagLabel`, `window.getStatusColor`, `window.getGradeColor`) are copied verbatim from the reference `data.js`; only `window.AUDIT_DATA` changes per audit.
+- ALWAYS use the friendly translation table in `skills/ui-ux-credit/SKILL.md` to convert internal anomaly `rule_name` values to user-facing `title_es/en`. NEVER pass raw rule names through to the dashboard.
 - ALWAYS run Step 7 (post-audit context interview) after both reports are saved. Skipped questions are fine; what matters is having the channel open.
 - For Phase 2 dispute actions, pair the bureau letter with a CFPB filing **only when the dispute targets reporting accuracy** (charge-offs, collections, late payments, mixed file, cross-bureau, temporal). Do NOT pair CFPB for goodwill letters, FCRA 605B identity-theft blocks (block first; CFPB only if block fails), personal-information corrections, or pure cease-and-desist letters. The `dispute-letter-generator` and `dispute-strategist` apply this nuance per anomaly type.
 - For Latino consumers (`client_state` in CA, TX, NY, FL, etc.), include state-specific citations alongside federal — the RAG returns these chunks automatically.

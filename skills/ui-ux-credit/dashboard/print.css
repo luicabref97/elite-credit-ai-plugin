@@ -1,0 +1,64 @@
+/* Print stylesheet — switches the dark interactive dashboard to the light
+   PDF artboard layout when the user prints (Cmd+P / Ctrl+P) or saves as PDF.
+
+   The runtime.html includes both <DirectionA> (visible on screen) and
+   <PDFArtboard> (hidden on screen, shown only during print). The pdf.html
+   shows the artboard directly on screen and during print.
+
+   When pdf.html is loaded standalone (no DirectionA in DOM), the @media
+   print rules still apply to the artboard for proper @page sizing and to
+   strip any UI chrome.
+*/
+
+@page {
+  size: letter;
+  margin: 0.5in;
+}
+
+@media print {
+  /* Force light background on print regardless of dark dashboard styles. */
+  html, body {
+    background: #ffffff !important;
+    color: #14191e !important;
+  }
+
+  /* Hide the design canvas / tweaks panel scaffolding entirely (in case
+     someone prints from index.html by mistake). */
+  .design-canvas, .tweaks-panel, .dc-toolbar, .dc-sidebar { display: none !important; }
+
+  /* Hide the dark interactive dashboard on print; only the print artboard
+     should remain. */
+  .dir-a { display: none !important; }
+
+  /* Reveal the PDF artboard host that the runtime hides on screen. */
+  .pdf-render-host { display: block !important; }
+
+  /* Hide the "Descargar PDF / Imprimir" buttons themselves on the printed page. */
+  .footer-actions, .btn-gold, .btn-ghost,
+  [data-action="print"], [data-action="download-pdf"] { display: none !important; }
+
+  /* Page break tuning — prevent breaking inside cards / tables. */
+  .pdf-section, .pdf-anomaly, .pdf-plan-block { break-inside: avoid; }
+  .pdf-table { break-inside: auto; }
+  .pdf-table tr { break-inside: avoid; break-after: auto; }
+
+  /* Ensure the artboard sits flush against the @page margin. */
+  .pdf-page {
+    background: #ffffff !important;
+    color: #14191e !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Print preview (when a screen rendering of the PDF artboard is shown,
+   like pdf.html on screen) — keep the artboard contained at letter width. */
+@media screen {
+  .pdf-render-host {
+    /* Hidden by default on the runtime; explicit display happens via inline
+       style on the runtime page. Defensive override here for any other
+       caller. */
+  }
+}
