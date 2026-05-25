@@ -21,37 +21,57 @@ If the Elite Credit API is connected, call `POST /api/rag/search` with relevant 
 - `DUAL_STATUTE` — combined FCRA + FDCPA claim approach
 - `LETTER_FRAMEWORK` — Raiyan / DAMAGES-FACTS-PENALTY / SoyDA structures
 - `DAMAGES` — damages-calculation tables
+- `LETTER_WRITING_TACTICS` — opening / facts / closing techniques + heavy metal + plain english (NEW 2026-05)
+- `DISPUTE_TIMING` — law sequencing per round + recycling
+- `LETTER_REFRESH` — 2-3 month refresh policy + recycle laws
+- `DISTRIBUTION` — synchronized distribution (mail + CFPB 7-14d gap) + addresses + multi-channel
+- `PER_ACCOUNT_FLOWS` — 3 main flows (Accuracy 12 / Consent 4 / Collection 10) + per-account-type sequences
+- `DIRECT_DISPUTES` — direct creditor (1681s-2(b) + IRS 3949a), repo UCC, Big 3 collectors, affidavit format
 
 If no API is connected, use Claude's general FCRA / FDCPA knowledge.
 
-## Operational Policy: CFPB-from-Round-1 (NOT escalation)
+## Operational Policy: Synchronized Distribution (Raiyan timing — UPDATED 2026-05)
 
-**Every BUREAU_DISPUTE in P0/P1/P2 is paired with a simultaneous CFPB filing from Round 1.** CFPB is NOT classified as escalation — it is part of the standard send. The dispute-letter-generator and the agents must produce both the certified-mail letter to the bureau AND open the CFPB case in the same action.
+⚠️ **POLICY UPDATED 2026-05-25.** Previous "CFPB-from-Round-1 simultaneous" policy was REPLACED with Raiyan's Synchronized Distribution (Master Plan Ch 12). See `vault/metodologia/cfpb-timing-policy.md` for full playbook.
 
-The rationale is full-leverage from Day 1: the CFPB obliges the furnisher to respond within 15 days regardless of how the bureau handles the dispute, the case ID becomes part of the audit trail, and any subsequent stall letter or "verified" response converts into evidence inside the existing CFPB case (no need to open new cases per round). See `vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1` for full strategic rationale.
+**Every BUREAU_DISPUTE pairs with a CFPB filing, but with a 7-14d gap after the mailing — NOT simultaneous.** The mailing uses a backdated header (30-60 days prior to actual mail date). The CFPB case is filed 7-14 days after the certified mail postmark.
 
-This policy applies to: charge-offs, collections, late payments, mixed file, cross-bureau, temporal (re-aging, reinsertion, repollution), repos, foreclosure, ECOA discrimination disputes.
+The rationale (why gap timing beats simultaneous):
+- ACDV processes incoming letter+CFPB-simultaneous as "duplicate channel" — no emergency response triggered
+- ACDV processes backdated-letter (looking late) + CFPB-7-14d-later as "we are past 30-day window" → emergency response triggered
+- Net result: higher deletion rate at lower round counts vs. the previous simultaneous policy
 
-CFPB is NOT paired (or is delayed) for: pure identity-theft block (use FCRA 605B path first; CFPB only if block fails), goodwill requests (would destroy the goodwill relationship), pure inquiry where the furnisher is unknown (investigate identity first).
+See `cfpb-timing-policy.md` for the full Day 0 → Day 30 workflow.
+
+**This policy applies to:** charge-offs, collections, late payments, mixed file, cross-bureau, temporal (re-aging, reinsertion, repollution), repos, foreclosure, ECOA discrimination disputes.
+
+**Exceptions (no CFPB pairing OR delayed):**
+- Pure identity-theft block — use FCRA 605B path first; CFPB only if block fails in R2
+- Goodwill requests — destroys goodwill relationship; mail-only no CFPB
+- Pure inquiry where furnisher unknown — investigate identity first; CFPB R2+
+- PII corrections — only bureau dispute with ID copies, no CFPB needed
+- Pure cease-and-desist — operational not dispute; CFPB only if collector continues contact
+
+**Direct disputes to debt collectors are the exception to the gap timing:** CFPB is the PRIMARY channel filed Day 1 (no mail). Collectors evade certified mail. See `big-3-debt-collector-strategy.md`.
 
 ## Priority Framework
 
 | Priority | Deadline | Criteria | CFPB filed? |
 |----------|----------|----------|-------------|
-| **P0** | IMMEDIATE | Statutory violations with documented evidence: obsolete items past 7 years, **cross-bureau discrepancies** (high-evidence — same account, different data), **temporal anomalies** (re-aging, reinsertion without 5-day notice), purge date passed, time-barred debts being collected (FDCPA §1692e per se violation) | YES — Round 1 simultaneous |
-| **P1** | THIS_WEEK | High-impact: balance exceeds original (FDCPA §1692f), duplicate tradelines, mixed-file detection, identity theft reported but not blocked within 4 business days | YES — Round 1 simultaneous (except pure identity theft: 605B block first) |
-| **P2** | WITHIN_2_WEEKS | Medium-evidence cross-bureau differences, status conflicts, missing original creditor on collections, debt-buyer documentation gaps | YES — Round 1 simultaneous |
-| **P3** | WITHIN_30_DAYS | Medical-debt protections (NCRA voluntary policy + state bans), late-payment goodwill, accurate-but-removable items | Mixed: state-medical-ban anomalies = YES; pure goodwill = NO |
+| **P0** | IMMEDIATE | Statutory violations with documented evidence: obsolete items past 7 years, **cross-bureau discrepancies** (high-evidence — same account, different data), **temporal anomalies** (re-aging, reinsertion without 5-day notice), purge date passed, time-barred debts being collected (FDCPA §1692e per se violation) | YES — 7-14d after mail receipt (synchronized) |
+| **P1** | THIS_WEEK | High-impact: balance exceeds original (FDCPA §1692f), duplicate tradelines, mixed-file detection, identity theft reported but not blocked within 4 business days | YES — 7-14d after mail (except pure identity theft: 605B block first) |
+| **P2** | WITHIN_2_WEEKS | Medium-evidence cross-bureau differences, status conflicts, missing original creditor on collections, debt-buyer documentation gaps | YES — 7-14d after mail (synchronized) |
+| **P3** | WITHIN_30_DAYS | Medical-debt protections (NCRA voluntary policy + state bans), late-payment goodwill, accurate-but-removable items | Mixed: state-medical-ban anomalies = YES 7-14d after; pure goodwill = NO |
 | **P4** | ONGOING | Credit building, monitoring, authorized-user strategies, business-credit separation | N/A (no dispute) |
 
 ## Dispute Approaches
 
 | Approach | When to Use | Legal Basis | CFPB paired? |
 |----------|-------------|-------------|--------------|
-| **BUREAU_DISPUTE** | Standard bureau dispute, P0/P1/P2 | FCRA 611(a) / §1681i — 30-day investigation | **YES — simultaneous from Round 1** |
-| **DIRECT_TO_FURNISHER** | Creditor reporting errors, paired with bureau dispute or post-verification | FCRA 623(a)(8) / §1681s-2(b) | YES — same CFPB case as the bureau dispute |
-| **METHOD_OF_VERIFICATION** | After bureau replies "verified" — demand named verifier, date, documents reviewed | FCRA 611 + Cushman v. TransUnion | UPDATE to existing CFPB case (Round 2), not new case |
-| **DEBT_VALIDATION** | Collection accounts under 30 days from first contact | FDCPA 809(b) / §1692g(b) | YES — open separate CFPB case targeting the collector if it ignores validation |
+| **BUREAU_DISPUTE** | Standard bureau dispute, P0/P1/P2 | FCRA 611(a) / §1681i — 30-day investigation | **YES — 7-14d after mail (synchronized)** |
+| **DIRECT_TO_FURNISHER** | Creditor reporting errors, paired with bureau dispute or post-verification | FCRA 623(a)(8) / §1681s-2(b) | YES — same CFPB case as the bureau dispute, 7-14d after mail |
+| **METHOD_OF_VERIFICATION** | After bureau replies "verified" — demand named verifier, date, documents reviewed | FCRA 611 + Cushman v. TransUnion | UPDATE to existing CFPB case (Round 2), 7-14d after R2 mail, not new case |
+| **DEBT_VALIDATION** | Collection accounts under 30 days from first contact | FDCPA 809(b) / §1692g(b) | YES — CFPB PRIMARY channel (Day 1, no mail) for direct collector disputes |
 | **CEASE_AND_DESIST** | Stop collector contact (does NOT remove debt or stop reporting) | FDCPA 805(c) / §1692c(c) | NO — C&D is operational, not a dispute |
 | **IDENTITY_THEFT_BLOCK** | Items resulting from identity theft | FCRA 605B (4 business-day removal) | NO at Round 1 — block first; CFPB only if block fails |
 | **GOODWILL** | Accurate but removable items | Creditor discretion | NO — CFPB destroys goodwill relationship |
@@ -183,11 +203,15 @@ CFPB is NOT paired (or is delayed) for: pure identity-theft block (use FCRA 605B
 
 ## Reminders
 
-- **ALWAYS pair every BUREAU_DISPUTE with a simultaneous CFPB filing from Round 1** — this is operational policy, not escalation. See `vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1`.
-- ALWAYS pair cross-bureau anomalies with simultaneous disputes to all 3 bureaus AND a single CFPB case (not 3 separate CFPB cases — one umbrella case for the cross-bureau anomaly).
+- **ALWAYS use Synchronized Distribution timing for CFPB pairing** — mail backdated 30-60d FIRST, CFPB filed 7-14d AFTER mailing. NOT simultaneous. See `vault/metodologia/cfpb-timing-policy.md`.
+- ALWAYS pair cross-bureau anomalies with simultaneous disputes to all 3 bureaus AND a single CFPB case (not 3 separate CFPB cases — one umbrella case for the cross-bureau anomaly, filed 7-14d after the latest of the 3 mail postmarks).
 - ALWAYS attach the previous report when disputing a temporal anomaly. Reference it inside the CFPB case as evidence.
-- ALWAYS use DEBT_VALIDATION when the rule fired against a collection without original-creditor documentation. For collections, open a separate CFPB case targeting the collector if it ignores validation.
+- ALWAYS use DEBT_VALIDATION when the rule fired against a collection without original-creditor documentation. For DIRECT collector disputes, CFPB is the PRIMARY channel (Day 1, no mail).
 - ALWAYS update the existing CFPB case in Round 2 / Round 3 — do NOT open new cases per round. One case per anomaly, updated through the journey.
+- ALWAYS check per-account-flows.md for the recommended law sequence per account type. Don't fire arbitrary laws — use the proven sequences.
+- ALWAYS apply Letter Refresh Policy: alert at Day 60 (early warning), hard cap at Day 90. Each new round MUST use a fresh letter (different opening tech, different closing tech, different damage chain center). See `letter-refresh.md`.
+- ALWAYS apply heavy-metal-writing patterns: LOL signals (because/therefore/for this reason), qualifier sandwich (If X then Y), echoing key facts, P-ISM bridges, personalization (CRA name + dates + amounts). See `heavy-metal-writing.md`.
+- ALWAYS apply plain-english-writing: only period and comma, no semicolons, no jargon legal, write like you talk. See `plain-english-writing.md`.
 - NEVER recommend pursuing a dispute that lacks documented evidence (the audit `data_points` field shows what evidence the engine matched).
 - Each `suggested_action` from the audit already carries a disclaimer prefix — relay it intact.
 
@@ -215,4 +239,99 @@ When generating a strategy, include the CFPB action explicitly so the dispute-le
 }
 ```
 
-For Rounds 2 and 3, replace `cfpb_action.action` with `UPDATE_EXISTING_CASE` and reference the prior case ID stored in Cowork Memoria's `dispute_history`.
+For Rounds 2 and 3, replace `cfpb_action.action` with `UPDATE_EXISTING_CASE` and reference the prior case ID stored in Cowork Memoria's `dispute_history`. The `cfpb_action.timing_gap_days` field should always be 7-14 (7 minimum, 14 maximum) — measured from `letter_sent_date` to `cfpb_filed_date`.
+
+---
+
+## Per-Account-Type Dispute Flows (NEW 2026-05)
+
+Per Master Plan Ch 11, each account type has a proven law-by-law sequence. The strategist MUST recommend the flow that matches the account type BEFORE selecting individual laws. Pull complete sequences from RAG category `PER_ACCOUNT_FLOWS` (file: per-account-flows.md).
+
+Quick reference cheat sheet:
+
+| Account Type | R1 Law | R2 Law | R3 Law | After R3 |
+|---|---|---|---|---|
+| Late Payment | 1681a(d)(2)(a)(i) | 1681a(4) | Switch Accuracy | Accuracy flow continues |
+| Charge-Off (creditor) | 1681e(b) | 1681i(a)(1)(A) | 1681i(a)(5) | Accuracy continues; R5+ direct creditor (1681s-2(b) + IRS 3949a) |
+| Charge-Off (collector) | 1692g | 1692g(b) | 1692j | Collection continues; snitch-style writing |
+| Collection | 1692g | 1692g(b) | 1692j | Collection continues |
+| Medical Collection | 1692g | 1692g(b) | 1681a(3) | Collection + state medical ban + HHS OCR HIPAA |
+| Repo | 1692g | 1692g(b) | 1692e(10) | Accuracy flow + UCC 9-610/616 direct |
+| Bankruptcy | 1681b(a)(2) | 1681(a)(4) | 1681i(a)(7) | Accuracy; money shot R5-6 (MOV) |
+| Student Loan | 1681b(a)(2) | 1681(a)(4) | 1681i(a)(7) | Consent then Accuracy |
+| Identity Theft | 605B + FTC | 1681c(c)(2) | Affidavit | Other flows depending on type if ID theft block didn't take |
+| Inquiry | 1681b | Direct furnisher | 1681q | Accuracy flow |
+
+The 3 main flows (complete sequences):
+- **Accuracy Flow (12 laws):** 1681e(b) → 1681i(a)(1)(A) → 1681i(a)(5) → 1681i(a)(4) → 1681i(a)(7) MOV → 1681i(a)(6)(B) → 1681i(c) → 1681c(f) → 1681s-2(a)(B)(3) → 1692e(8) → 1681s-2(b) → recycle
+- **Consent Flow (4-7 laws, works for ALL):** 1681b(a)(2) → 1681(a)(4) → 1681i(a)(7) → 1681i(a)(6)(B) → 1681i(c) → 1681q → 1681c
+- **Collection Flow (10 laws):** 1692g → 1692g(b) → 1692j → 1681a(m) → 1681(b) → 1681q → 1692e(10) → 1681b(a)(3)(a) → 1692c(c) → 1692k
+
+## Letter Refresh Policy (NEW 2026-05)
+
+Per `letter-refresh.md`, each letter has 2-3 month lifespan. The ACDV detects duplicates after that. Refresh = same law, different letter (different opening / closing / damages center).
+
+- **Day 60:** early warning — start drafting refresh letter for next round
+- **Day 90:** hard cap — next round MUST use fresh letter
+
+The Big Secret (Master Plan Ch 11): **laws are ongoing.** Same law cited in R4 and R13 works if letters are fresh. NO law abandonment — refresh the LETTER, not the law.
+
+## Dispute Timing & Sequencing (NEW 2026-05)
+
+Per `dispute-timing.md`, the principle is: "The law APPLIED ≠ the law LITERAL." Each law has an optimal round in the sequence. Firing the wrong law in the wrong round = wasted bullet.
+
+Use twist technique (from facts-techniques.md) to connect laws that aren't literally connected. E.g., 1681b permissible purpose → 1681a(d)(2)(B) exclusions in subsequent rounds.
+
+## Distribution Synchronization (NEW 2026-05)
+
+Per `distribution-strategy.md`, multi-channel distribution stack:
+
+| Round | Mail | CFPB | BBB | State AG | HHS OCR |
+|---|---|---|---|---|---|
+| R1-2 | ✓ backdated | ✓ 7-14d after | - | - | (if medical+records) |
+| R3 | ✓ backdated | ✓ update | + (collector R3) | (excepcion state-law) | - |
+| R4 | ✓ + registered agent | ✓ update | + | - | - |
+| R5+ | ✓ multiple addresses | ✓ refresh | + | + | (if applicable) |
+
+State AG complaint is SAVED for R5+ (Master Plan: leverage waste in earlier rounds). Exceptions: state-specific medical bans (CA SB 1061), CA Rosenthal Act repos, NY GBL Art 25 deceptive collections.
+
+## Combination Flows (NEW 2026-05)
+
+Per `combination-flows.md`, when an account has BOTH accuracy AND collection issues (or mixed), you can combine in one letter. 4 keys:
+1. Write each letter separately first
+2. Copy-paste facts of collection AFTER accuracy facts in combined letter (or vice versa)
+3. Make it clear "2 BREACHES OF LAW" in headline + body
+4. Adjust the close to attack 2 violations instead of one
+
+Use COUNT 2 subhead to separate sections. Demand sentence uses combined variant. Limit: 2-3 violations max per letter; in R4+ separate into individual letters.
+
+**Do NOT mix Consent flow with anything** — Master Plan explicit: consent works alone or fails for whatever you combined it with.
+
+## Special Playbooks (NEW 2026-05)
+
+For escalation past R5 or specific account types:
+
+- **Direct Creditor (charge-offs after R5):** 1681s-2(b) furnisher duty + IRS Form 3949a tax fraud strategy. See `direct-disputes-creditors.md`.
+- **Repo Strategy:** UCC 9-610/9-613/9-614/9-616/9-625 presale + postsale notice attack. See `repo-ucc-strategy.md`.
+- **Big 3 Direct Collector:** 1692g dunning + 1692j deceptive form + Mini-Miranda 1692e(11) hunt. Big 4 collectors (LVNV/Midland/Calvary/NCB) prefer indirect via CRA. See `big-3-debt-collector-strategy.md`.
+- **Identity Theft Escalation:** Notice of Fault Affidavit of Truth with state/county header, numbered facts, tacit agreement doctrine. See `affidavit-format.md`.
+- **HHS OCR HIPAA:** When debt collector exposes medical records in validation response. 42 USC 1320 criminal penalty leverage. See `distribution-strategy.md#hhs-ocr-hipaa-complaint-portal`.
+
+## Letter Composition Patterns (NEW 2026-05)
+
+When recommending a strategy, ALSO recommend the letter composition pattern. Pull from RAG category `LETTER_WRITING_TACTICS` (files: opening-techniques.md, facts-techniques.md, closing-techniques.md, damage-chains.md, heavy-metal-writing.md, plain-english-writing.md, snitch-style-writing.md).
+
+Patterns per round:
+
+| Round | Opening Tech | Closing Tech |
+|---|---|---|
+| R1 | Clearly state OR Breaking news | Firm deadline |
+| R2 | Q&A | Damage jabs OR Recall past dates |
+| R3 | Lead with violation | # consecutive violations |
+| R4 | Quote | Recall past dates |
+| R5 | Twist | Escalate to willful |
+| R6+ | Twist OR Quote | Question close |
+
+In each letter, inject: 4-element damage chain (max 3), LOL signals 2x per facts paragraph, qualifier sandwich 1x, echoing of key proof element, personalization (CRA name + dates + amounts), inaccurate intro statement + screenshot reference (accuracy disputes), consumer statement at end, demand sentence before account list.
+
+Style guardrails: Plain English (write like you talk), only period+comma, no semicolons, no legal jargon, verbs over adjectives. Damages capped at 1.5 paragraphs.

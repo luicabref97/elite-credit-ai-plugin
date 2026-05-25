@@ -218,8 +218,8 @@ Create `output/dispute_tracking.md` with a tracking table that has BOTH `certifi
 
 ## RULES
 
-- **ALWAYS pair every BUREAU_DISPUTE letter with a parallel CFPB filing draft** (operational policy — see `vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1`). Exceptions: identity-theft block, goodwill, cease-and-desist.
-- **ALWAYS update the existing CFPB case in Rounds 2/3** — do NOT instruct opening a new CFPB case for the same anomaly. Reference the prior CFPB case ID stored in Cowork Memoria's `dispute_history`.
+- **ALWAYS pair every BUREAU_DISPUTE letter with a CFPB filing — BUT with Synchronized Distribution timing (Raiyan)** — mail backdated 30-60d FIRST, CFPB filed 7-14d AFTER mailing. See `vault/metodologia/cfpb-timing-policy.md`. Exceptions remain: identity-theft block, goodwill, cease-and-desist, PII corrections.
+- **ALWAYS update the existing CFPB case in Rounds 2/3** — do NOT instruct opening a new CFPB case for the same anomaly. Reference the prior CFPB case ID stored in Cowork Memoria's `dispute_history`. Each update also follows 7-14d gap after the round's mailing.
 - NEVER include full SSN — only last 4 digits.
 - NEVER use threatening or emotional language — professional, factual.
 - ALWAYS include specific legal citations (FCRA section + Reg F section + case law when applicable).
@@ -239,3 +239,149 @@ This is non-negotiable for user-facing chat output (the cover letters and the ch
 - **NEVER** use internal anomaly rule identifiers (e.g., `DOFD_DISCREPANCY_CROSS_BUREAU`) in user-facing chat. Translate to plain language. The formal letters can and should cite specific statute sections (FCRA §605(a)(4), FDCPA §1692g, etc.) because that is the letter's legal weapon — but the chat summary explaining the letter to the user uses plain language.
 - **NEVER** confirm letter generation with API status ("API online — 557 chunks · 97 rules · v3.0.0"). The user wants their letters and the cover-page summary, not the API metadata.
 - The user receives the formal letter, a plain-language summary of what it argues, and clear mailing instructions. Technical depth stays in the letter body where it serves a legal purpose.
+
+---
+
+## LETTER COMPOSITION RECIPE (NEW 2026-05)
+
+Per pre-outline-technique.md, BEFORE writing any letter, generate a pre-outline. Then expand. This cuts composition time in half AND ensures coherence.
+
+**Pre-outline template per letter (populated dynamically from audit findings):**
+
+```yaml
+PRE-OUTLINE — [client_id] — [round_number]
+
+ACCOUNT TYPE: [late_payment | charge_off | collection | repo | bankruptcy | id_theft | inquiry]
+FLOW: [accuracy | consent | collection | combination]  # from per-account-flows.md
+LAW(S) TO CITE: [primary_law, optional_secondary]
+
+OPENING TECHNIQUE: [clearly_state | story | qa | lead_with_violation | quote | breaking_news | twist]
+HEADLINE STYLE: [direct_claim | penalty_infusion | verbal_twist | urgent_matter | question_implied]
+
+DAMAGE CHAIN CENTER: [carro | vivienda | emocional | lifestyle]
+DAMAGE CHAIN ELEMENTS (2-3):
+  1. <individual damage from interview/audit>
+  2. <individual OR bridge to who-else>
+  3. <who-else damage if applicable>
+
+FACTS TECHNIQUES (in order):
+  1. TWIST: <re-frase del statute en propias palabras>
+  2. MECH: <how exactly was the law broken — specific to credit report>
+  3. REASON_WHY: <bridge logico with because/therefore>
+  4. DOC: <case law cite + screenshot reference>
+
+CLOSING TECHNIQUE: [firm_deadline | damage_jabs | consecutive_violations | escalate_willful | recall_dates | question_close]
+DEMAND SENTENCE: [accuracy_variant | collection_variant | consent_variant | combination_variant]
+CONSUMER STATEMENT: <1-frase summary for 1681i(c)>
+
+HEAVY METAL ELEMENTS:
+  LOL_signals: [because, therefore, for_this_reason, according_to]  # pick 2-4
+  qualifier_sandwich: <"If X, then Y" formulation>
+  echo_elements: <numbers, dates, amounts to repeat 2-3 times>
+  p_ism_bridge: <fin parrafo X → inicio parrafo X+1>
+
+PERSONALIZATION:
+  cra_name: [Equifax | Experian | TransUnion]
+  creditor_name: <exact>
+  account_last4: <####>
+  date_of_prev_dispute: <if R2+>
+  exact_dollar_amount: <$X,XXX.XX>
+  number_of_rounds: <N>
+
+EXHIBITS: [exhibit_a, exhibit_b, ...]
+```
+
+Steps to compose:
+1. Identify account type → recommend flow (consult per-account-flows.md via RAG)
+2. Identify round → select opening + closing tech from round-specific matrix below
+3. Pull damages from `account_context.json` (from forensic-analyst Step 7) → compose damage chain
+4. Pull statute + case law from audit findings + dispute-strategist output → compose FACTS with twist+mech+reason+doc
+5. Apply heavy-metal LOL signals to each FACTS paragraph
+6. Apply personalization (name-drop CRA / data furnisher, reference past letter dates)
+7. Add inaccurate intro statement + screenshot reference (accuracy disputes per accuracy-dispute-essentials.md)
+8. Add consumer statement at bottom (always — 1681i(c))
+9. Add demand sentence (style depends on accuracy/collection/consent mix)
+
+## STYLE GUARDRAILS (NEW 2026-05 — Plain English Per TPCRL Ch 8)
+
+The letter is read by (a) an ACDV machine and (b) a third-world VA reviewer if it escalates. Neither understands legal jargon. Write like you talk.
+
+**Mandatory style rules:**
+- Only period (.) and comma (,) for punctuation. NO semicolons. NO em dashes.
+- NO legal jargon ("pursuant to", "wherefore", "heretofore", "to wit", "notwithstanding", "be that as it may").
+- USE legal CONCEPTS (cite statute as "15 USC 1681e(b)", case law as "Cushman v. TransUnion, 3rd Cir. 1997", terms like "willful neglect" and "punitive damages").
+- Active voice, not passive ("Equifax reported inaccurately" not "the accounts were reported inaccurately by Equifax").
+- 1st person ("I demand") not 3rd person ("the consumer requests").
+- Concrete nouns ("Chase account ending 1234 reports $5,234 balance") not vague ("the matter requires attention").
+- Facts over adjectives ("havent slept in 3 days" not "depressed").
+- Sentence length matches tone: long sentences for thoughtful/desperate, short sentences for firm/demanding. Match round.
+
+**Damage chain limit:** max 3 elements per chain, max 1.5 paragraphs total for DAMAGES section. The FACTS section is where the legal weight lives — don't bury it with over-damages.
+
+## ROUND-SPECIFIC OPENING + CLOSING SELECTION (NEW 2026-05)
+
+Per opening-techniques.md and closing-techniques.md, rotate techniques per round to avoid ACDV duplicate detection.
+
+| Round | Opening Default | Opening Alt | Closing Default | Closing Alt |
+|---|---|---|---|---|
+| R1 | clearly_state | breaking_news / story | firm_deadline | damage_jabs |
+| R2 | qa | lead_with_violation | damage_jabs | recall_dates |
+| R3 | lead_with_violation | recall_dates | consecutive_violations | recall_dates |
+| R4 | quote | twist | recall_dates | consecutive_violations |
+| R5 | twist | quote | escalate_willful | question_close |
+| R6+ | twist OR quote | lead_with_violation | question_close | escalate_willful |
+
+**Important:** Never repeat the SAME opening tech in consecutive rounds for the same account. Letter Refresh Policy (letter-refresh.md) makes this mandatory at the Day 90 hard cap.
+
+## LETTER TRACKING & REFRESH (NEW 2026-05)
+
+Per letter-refresh.md, each letter has 2-3 month lifespan. The agent MUST log in `output/dispute_tracking.md` per round:
+
+```yaml
+client_id: XYZ
+round: N
+letter_header_date: <backdated 30-60d>
+letter_sent_date: <actual postmark>
+cfpb_case_filed_date: <7-14d after sent>
+cfpb_case_id: <CFPB Case ID>
+gap_days: <cfpb_filed - letter_sent>  # validate 7-14 range
+letter_techniques:
+  opening: <selected from matrix>
+  closing: <selected from matrix>
+  damage_center: <chain center>
+  laws_cited: [<list>]
+  exhibits: [<list>]
+refresh_due_date: <letter_sent + 60 days — EARLY WARNING>
+refresh_mandatory_date: <letter_sent + 90 days — HARD CAP>
+```
+
+The phase-tracker agent reads this and alerts:
+- Day 60: "Round N letter for [client_id] is 60 days old. Begin drafting refresh letter."
+- Day 90: "⚠️ Round N letter for [client_id] is 90 days old. Next round MUST use fresh letter (different opening tech, different closing tech, different damage chain center)."
+
+The Big Secret: **laws are ongoing.** When generating refresh letter, KEEP the law that worked OR continue per the per-account-flow sequence. Change the LETTER, not the LAW. Same statute cited in R4 and R13 works if letters are fresh.
+
+## COMBINATION FLOW LETTER (NEW 2026-05)
+
+When an account has BOTH accuracy AND collection issues (e.g., charge-off with cross-bureau discrepancy + missing original creditor), generate a combination letter per combination-flows.md. 4 keys:
+
+1. Write each letter separately first (one accuracy + one collection)
+2. Copy-paste collection FACTS section AFTER accuracy FACTS section, separated by `**COUNT 2:**` subhead
+3. Headline declares "2 BREACHES OF LAW: <law 1 + law 2>"
+4. Closing attacks 2 violations stacked: "You broke the law TWICE in this dispute — once under <law 1>, once under <law 2>. Each qualifies for statutory damages. With 2 violations stacked, your exposure is substantial."
+
+Demand sentence: "I demand you delete the following unlawful items from my credit report immediately:" + atomized list grouped by violation type.
+
+**DO NOT mix Consent flow with anything else** — Master Plan Ch 10 explicit: consent works alone or fails for whatever you combined it with.
+
+## SNITCH-STYLE WRITING FOR COLLECTION DISPUTES VIA CRA (NEW 2026-05)
+
+Per snitch-style-writing.md: when disputing a collection account via the CRA (not directly to collector), use snitch framing — drag the CRA into complicity with the collector's FDCPA violation.
+
+**Pattern:**
+- Opening: damages caused by the unvalidated collection
+- Setup the snitch: "The collector violated 1692g(a) by failing to send dunning letter within 5 days"
+- Drag the CRA: "By reporting this unvalidated debt to <CRA>, the collector used you as the channel for their violation. <CRA> is now complicit. Under 1681s-2(a), furnishers must report accurate info. An unvalidated debt cannot be accurate."
+- Closing: "Option 1: delete the account. Option 2: dual-statute claim against both collector (FDCPA) AND CRA (FCRA 1681e(b) + 1681s-2)."
+
+Standard collection flow (per per-account-flows.md): R1 1692g → R2 1692g(b) → R3 1692j → continues.

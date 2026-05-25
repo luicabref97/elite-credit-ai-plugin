@@ -168,7 +168,10 @@ Sections:
 - Anomaly Findings (grouped by category — date / balance / status / etc.)
 - **Cross-bureau Findings** — only when `other_bureau_reports` was sent
 - **Temporal Findings** — only when `previous_report_data` was sent
-- Dispute Strategies (P0-P4 with legal basis, evidence required, timeline). For Round-1 actions targeting reporting-accuracy anomalies, note that the bureau letter is paired with a simultaneous CFPB filing (`vault/metodologia/secuencias-disputa.md#Por Que CFPB desde Round 1`). Do NOT advertise CFPB pairing for goodwill, FCRA 605B identity-theft blocks (block first), personal-information corrections, or pure cease-and-desist letters.
+- Dispute Strategies (P0-P4 with legal basis, evidence required, timeline). For each strategy, include:
+  - **Account-type-specific flow recommendation** — pull from `vault/metodologia/per-account-flows.md` via RAG. Each anomaly maps to an account type (late payment / charge-off / collection / repo / bankruptcy / ID theft / inquiry) and each account type has a proven law-by-law sequence. Don't just list isolated law citations — recommend the complete flow per Raiyan Anwaar's Master Plan Ch 11 (e.g., "Charge-off (creditor): Accuracy Flow R1=1681e(b) → R2=1681i(a)(1)(A) → R3=1681i(a)(5) → ... → R5+ Direct creditor with 1681s-2(b) + IRS 3949a").
+  - **CFPB timing per Synchronized Distribution policy** — mail backdated 30-60d FIRST, CFPB filed 7-14d AFTER mailing (NOT simultaneous). Reference `vault/metodologia/cfpb-timing-policy.md`. Do NOT advertise CFPB pairing for goodwill, FCRA 605B identity-theft blocks (block first), personal-information corrections, or pure cease-and-desist letters.
+  - **Letter refresh window** — per `letter-refresh.md`, each letter has 2-3 month lifespan. Note the refresh-due-date (Day 60 early warning) and refresh-mandatory-date (Day 90 hard cap) for each Round-1 strategy.
 - Timeline (week-by-week action plan)
 - Legal Citations
 - **Legal Disclaimer Footer** — relay the API's `legal_disclaimer` text once
