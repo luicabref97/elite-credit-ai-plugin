@@ -109,7 +109,7 @@ When educating the consumer about medical debt, present these in order: (1) stat
 
 ## Vault references for deeper content
 
-The credit-law RAG (557 chunks) carries detailed reference material that this skill can augment its answers with:
+The credit-law RAG (756 chunks) carries detailed reference material that this skill can augment its answers with:
 
 - `vault/guias-maestras/educacion-crediticia-myfico.md` — model comparison detail (chunk category: `EDUCATION`)
 - `vault/guias-maestras/us-credit-scoring-systems.md` — current scoring landscape

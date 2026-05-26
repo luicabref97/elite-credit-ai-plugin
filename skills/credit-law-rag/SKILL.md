@@ -3,7 +3,7 @@ description: >
   Activates when discussing FCRA, FDCPA, FACTA, ECOA, TILA, CARD Act, EFTA, UDAAP, SCRA,
   Reg F, Reg V, Reg X, Reg BB, HEA, Bankruptcy Code, UCC Article 9, CROA, or US state
   consumer-credit laws (California Rosenthal, Texas Finance Code, NY GBL Article 25,
-  Florida CCPA). Searches a 557-chunk legal knowledge base covering federal and state
+  Florida CCPA). Searches a 756-chunk legal knowledge base covering federal and state
   consumer law, jurisprudence, dispute frameworks, and letter templates. Use when user
   mentions "my rights", "can they do that", "is this legal", "dispute letter",
   "cease and desist", "demanda", "leyes de credito", "estatuto de limitaciones",
@@ -12,7 +12,7 @@ description: >
 
 # Credit Law RAG
 
-Search and retrieve legal knowledge for credit repair strategies, citations, and consumer-rights education from a **557-chunk legal knowledge base** spanning 17 federal laws and 5 state laws.
+Search and retrieve legal knowledge for credit repair strategies, citations, and consumer-rights education from a **756-chunk legal knowledge base** spanning 17 federal laws and 5 state laws.
 
 ## How to Search
 

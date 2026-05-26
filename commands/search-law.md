@@ -1,8 +1,8 @@
 ---
-description: Search the 557-chunk FCRA/FDCPA/state-law legal knowledge base by query and category
+description: Search the 756-chunk FCRA/FDCPA/state-law legal knowledge base by query and category
 ---
 
-Search the Elite Credit AI **557-chunk legal knowledge base** for credit law information across 17 federal laws and 5 state laws, plus jurisprudence and dispute frameworks.
+Search the Elite Credit AI **756-chunk legal knowledge base** for credit law information across 17 federal laws and 5 state laws, plus jurisprudence and dispute frameworks.
 
 If no query is provided, ask the user what they want to search for.
 

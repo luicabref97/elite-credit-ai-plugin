@@ -1,7 +1,7 @@
 ---
 description: >
   Generate prioritized dispute strategies for the 97-rule v3 audit findings. Uses the
-  557-chunk legal RAG with FCRA / FDCPA / Reg F / Reg V / Reg X / state-law citations
+  756-chunk legal RAG with FCRA / FDCPA / Reg F / Reg V / Reg X / state-law citations
   and 2024-2026 case law. Activates when user says "dispute strategy", "how to dispute",
   "what should I dispute first", "create dispute plan", "prioritize my disputes",
   "estrategia de disputa", or after an audit completes.

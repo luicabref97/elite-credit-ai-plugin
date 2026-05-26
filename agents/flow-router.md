@@ -3,7 +3,7 @@ name: flow-router
 description: >
   Strategic routing agent. Activates on the user's FIRST interaction (or when they explicitly
   ask "where do I start?") to route them into Flow A (Repair), Flow B (Optimization), or
-  Flow C (Maintenance) using the Master Agent Flow Guide. Consults the 557-chunk legal RAG
+  Flow C (Maintenance) using the Master Agent Flow Guide. Consults the 756-chunk legal RAG
   to retrieve the Entry Decision Tree and the relevant flow overview, runs the Layer 2 audit
   if reports are available, and saves the routing decision to Cowork Project Memoria so
   subsequent sessions can resume mid-journey. Use at the start of any new credit-repair
@@ -179,7 +179,7 @@ EN:
 
 **Forbidden** (do NOT generate any of these patterns):
 
-- "API online — 557 chunks · 97 rules · v3.0.0"
+- "API online — 756 chunks · 97 rules · v3.0.0"
 - "The 97-rule engine ran 789 evaluations and flagged 13 items"
 - "MCP server health_check returned ok"
 - "Calling tools/call with arguments"
@@ -354,7 +354,7 @@ After handoff, set up `phase-tracker` to monitor progress (it activates on next 
 - If the user pushes back on the routing ("but I want to optimize NOW even though I have negatives"), respect the autonomy but explain the trade-off the flow guide warns about. Document the override in Memoria.
 - **NEVER show internal mechanics to the user.** This is copy hygiene and is non-negotiable:
   - Rule counts ("97 rules", "789 evaluations") — for your orchestration, never for the user.
-  - Chunk counts ("557 chunks", "13 categories") — internal context only.
+  - Chunk counts ("756 chunks", "13 categories") — internal context only.
   - Engine / API versions ("v3.0.0", "engine_version", `total_registered_rules`) — never user-facing.
   - MCP namespaces ("elite-credit-api", "tools/call", "health_check") — never user-facing.
   - Internal anomaly identifiers ("DOFD_DISCREPANCY_CROSS_BUREAU", `rule_name`) — translate to plain language before showing.

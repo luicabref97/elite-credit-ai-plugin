@@ -2,7 +2,7 @@
 
 > Credit-journey suite for Claude Cowork — built for US consumers (with a Latino focus).
 > Covers the full arc: forensic **repair** when there are FCRA/FDCPA anomalies, score **optimization** when the report is clean, and **maintenance + financial education** for ongoing use.
-> Powered by the Elite Credit API v3.0 (97-rule audit + 557-chunk legal RAG over MCP HTTP).
+> Powered by the Elite Credit API v3.1 (97-rule audit + 756-chunk legal RAG over MCP HTTP).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](./.claude-plugin/plugin.json)
@@ -29,7 +29,7 @@ Upload a credit report PDF and get:
 
 - Full extraction of ~75 fields per account across **Equifax, Experian, TransUnion** (multi-bureau supported in one pass)
 - **97 compliance rules** detecting FCRA / FDCPA / Reg F / Reg V / Metro2 violations — including **cross-bureau** (DOFD/balance/status mismatches) and **temporal** (re-aging, reinsertion, repollution)
-- Prioritized dispute strategies (P0-P4) with legal citations from a **557-chunk** knowledge base covering **17 federal laws and 5 state laws**
+- Prioritized dispute strategies (P0-P4) with legal citations from a **756-chunk** knowledge base covering **17 federal laws and 5 state laws**
 - Personalized dispute letters across **17 templates** (round 1/2/3, debt validation, cease-and-desist, foreclosure, bankruptcy trustee/clerk, summons response, identity theft, etc.)
 - Credit-score education at an 8th-grade reading level — VantageScore 3.0/4.0 + FICO 8/9 aware
 - A `legal_disclaimer` plus a per-action prefix from the API — the agent always presents the audit as educational material, never as legal advice
@@ -66,7 +66,7 @@ The plugin works out of the box with Claude's general FCRA/FDCPA knowledge. No A
 
 ### Enhanced mode (with the Elite Credit API)
 
-Connect the API to unlock 97 programmatic rules, the 557-chunk legal RAG, cross-bureau and temporal audits, and the 11 Metro2 config files.
+Connect the API to unlock 97 programmatic rules, the 756-chunk legal RAG, cross-bureau and temporal audits, and the 11 Metro2 config files.
 
 1. Deploy the API: see [luicabref97/elite-credit-api](https://github.com/luicabref97/elite-credit-api) (one-click Railway deploy).
 2. In your Cowork project, set:
@@ -99,7 +99,7 @@ The API is wrapped as an MCP server. Each tool is callable from any agent or ski
 | `/analyze` | Full forensic pipeline (extract → audit → strategize → report). Supports 1-3 bureau reports plus optional previous report. |
 | `/audit` | Run the 97 compliance rules on previously extracted data. Accepts cross-bureau and temporal payloads. |
 | `/dispute-letters` | Generate personalized dispute letters from the 17-template catalog. |
-| `/credit-qa` | Interactive credit-health Q&A using the 557-chunk legal RAG and Cowork Project memory. |
+| `/credit-qa` | Interactive credit-health Q&A using the 756-chunk legal RAG and Cowork Project memory. |
 | `/search-law` | Search the legal RAG by query and category (13 categories available). |
 
 ## Agents
@@ -109,7 +109,7 @@ The API is wrapped as an MCP server. Each tool is callable from any agent or ski
 | `flow-router` | Sonnet | Strategic routing on first interaction. Consults the Master Agent Flow Guide, runs Layer 2 audit via MCP, decides Flow A/B/C + phase, persists to Cowork Memoria. |
 | `phase-tracker` | Sonnet | Journey continuity across sessions. Recovers state from Memoria, computes overdue actions and time elapsed, schedules check-ins via Cowork Programado. |
 | `credit-forensic-analyst` | Opus | End-to-end forensic analysis. Orchestrates extract → audit → strategize → report. |
-| `credit-health-advisor` | Sonnet | Interactive credit-health Q&A backed by the 557-chunk RAG. |
+| `credit-health-advisor` | Sonnet | Interactive credit-health Q&A backed by the 756-chunk RAG. |
 | `dispute-letter-generator` | Sonnet | Professional dispute-letter drafting across 17 templates. |
 
 ## Skills
@@ -120,7 +120,7 @@ The API is wrapped as an MCP server. Each tool is callable from any agent or ski
 | `credit-report-parser` | PDF extraction (~75 fields/account). Outputs single, multi-bureau, or temporal `CreditReportData`. |
 | `fcra-compliance-auditor` | 97-rule compliance engine with cross-bureau, temporal, and dispute-history awareness. |
 | `dispute-strategist` | P0-P4 dispute strategy generation with the 97-rule catalog and 2024-2026 jurisprudence (Spokeo, TransUnion v. Ramirez, Henson, Cushman, Sessa, Hunstein, Heintz, Jerman). |
-| `credit-law-rag` | 557-chunk legal RAG search across 13 categories. |
+| `credit-law-rag` | 756-chunk legal RAG search across 13 categories. |
 | `credit-score-educator` | Score explanation with FICO 8/9 + VantageScore 3.0/4.0 nuances. |
 | `metro2-transformer` | Programmatic access to 11 Metro2 config files via `/api/config/{filename}`. |
 | `ui-ux-credit` | Brand design system for dashboards. |

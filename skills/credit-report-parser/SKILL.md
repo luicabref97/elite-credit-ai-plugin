@@ -9,7 +9,7 @@ description: >
 
 # Credit Report Parser
 
-Extract ALL data from a US tri-bureau credit report PDF into a structured `CreditReportData` JSON aligned with the Elite Credit API v3.0 contract.
+Extract ALL data from a US tri-bureau credit report PDF into a structured `CreditReportData` JSON aligned with the Elite Credit API v3.1 contract.
 
 ## Steps
 

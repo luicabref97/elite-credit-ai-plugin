@@ -2,7 +2,7 @@
 description: Interactive credit health Q&A about your credit report and scores
 ---
 
-Start an interactive credit health Q&A session using previously analyzed credit data and the **557-chunk legal RAG** (17 federal laws + 5 state laws).
+Start an interactive credit health Q&A session using previously analyzed credit data and the **756-chunk legal RAG** (17 federal laws + 5 state laws).
 
 ## Context Loading
 
@@ -40,7 +40,7 @@ Answer questions about:
 
 ## Knowledge Base
 
-If the Elite Credit API is connected (MCP server `elite-credit-api`), call `POST /api/rag/search` for detailed legal references from the **557-chunk knowledge base** (rate limit 120/min). Useful category filters:
+If the Elite Credit API is connected (MCP server `elite-credit-api`), call `POST /api/rag/search` for detailed legal references from the **756-chunk knowledge base** (rate limit 120/min). Useful category filters:
 
 - "What does the law say about X" → `LEGAL_INTERPRETATION`
 - "Court cases supporting my dispute" → `JURISPRUDENCE` + `LEGAL`

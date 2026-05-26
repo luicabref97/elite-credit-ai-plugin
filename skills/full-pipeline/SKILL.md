@@ -4,7 +4,7 @@ description: >
   "analyze my credit report", "run full analysis", "forensic audit", "credit report pipeline",
   or uploads a credit report PDF. Orchestrates extraction, visualization, auditing
   (97 FCRA/FDCPA/Reg F/Metro2 rules with cross-bureau and temporal support), dispute
-  strategy generation with 557-chunk legal RAG, and dispute-letter generation. Multi-bureau
+  strategy generation with 756-chunk legal RAG, and dispute-letter generation. Multi-bureau
   and previous-report uploads are detected automatically.
 ---
 
@@ -80,7 +80,7 @@ If no API is connected, perform a manual audit using Claude's knowledge of FCRA 
 
 **Step 4 — Strategize**
 
-Delegate to the `dispute-strategist` skill, which calls `POST /api/rag/search` if the API is connected to retrieve legal citations from the 557-chunk knowledge base.
+Delegate to the `dispute-strategist` skill, which calls `POST /api/rag/search` if the API is connected to retrieve legal citations from the 756-chunk knowledge base.
 
 Generate prioritized dispute strategies P0-P4. Save to `output/dispute_strategies.json`.
 
