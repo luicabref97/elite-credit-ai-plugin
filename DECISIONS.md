@@ -88,11 +88,64 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
 
 ---
 
+### ADR-008: Plugin v3.1.0 — adopt audit-report dashboard + dual-output deliverables
+- **Date:** 2026-05-02
+- **Decision:** Plugin bumped 3.0.4 → 3.1.0. The `credit-forensic-analyst` agent now produces THREE deliverables per audit: (1) `forensic_report.md` (technical, pro-facing, FCRA/FDCPA citations + jurisprudence), (2) `consumer_dashboard.md` (plain-language, 8th-grade reading level, no jargon — for end consumer), (3) `dashboard/runtime.html` (interactive HTML with 3 score gauges + factor donut + master/detail account view + filterable anomalies + timeline + bilingual ES/EN toggle + PDF export via Cmd+P). Marketplace + plugin.json version updated together.
+- **Alternatives considered:**
+  1. Single technical report (status quo through 3.0.4) — REJECTED: alienates consumer end-users who don't read 20-page legal docs
+  2. Single consumer-friendly report — REJECTED: alienates pros who need depth
+  3. Optional toggle (config-driven) — REJECTED: complexity not justified vs always-produce-3
+- **Rationale:** The plugin's market is split between consumers (need plain language + visual) and credit-repair pros (need technical depth + citations). Producing all 3 every time + letting the user pick which to share with their client = no compromise. The HTML dashboard is the "wow" deliverable that demonstrates value to consumers before they read anything.
+- **Status:** Accepted
+
+### ADR-009: OAuth 2.0 client_credentials grant — Cowork connector compatibility
+- **Date:** 2026-05-08
+- **Decision:** Coordinated with API repo ADR-010: plugin's `.mcp.json` reads from Cowork's OAuth flow (Client ID + Client Secret form), forwards to API's `POST /oauth/token` endpoint, receives back the same string as `ELITE_CREDIT_API_KEY` env var (no token rotation in v1). All plugin agents perform the Step 0 environment check via `health_check` MCP tool to verify connectivity before doing any work.
+- **Alternatives considered:**
+  1. Stay Bearer-only — REJECTED: Cowork connector form is OAuth-only, no "paste API key" mode
+  2. Custom auth flow outside RFC standards — REJECTED: Cowork enforces RFC 8414 / 9728 discovery
+- **Rationale:** The plugin must use Cowork's OAuth UX. API repo's OAuth implementation (ADR-010) provides the server side; plugin's `.mcp.json` references the OAuth metadata endpoint. End result: user pastes API key into Cowork's "Client Secret" field, plugin works.
+- **Status:** Accepted (the /mcp endpoint specifically went open-no-auth per API ADR-011 — but the OAuth machinery stays operational for REST endpoints)
+
+### ADR-010: Plugin v3.2.0 → v3.2.1 — rollback hotfix versioning pattern
+- **Date:** 2026-05-12
+- **Decision:** When the 2026-05-12 attempt to re-enable /mcp auth failed against the user's actual Cowork install, bumped plugin 3.2.0 → 3.2.1 as a rollback hotfix release. v3.2.0 release notes had announced "Bearer auth re-enabled" — v3.2.1 explicitly retracts that claim and signals the rollback. No plugin CODE change (the plugin is metadata-only: marketplace.json + plugin.json version bumps + release notes in commit message). The API repo did the actual revert (commit `0c704cd`).
+- **Alternatives considered:**
+  1. Stay at v3.2.0 + just revert API — REJECTED: consumers who already updated to v3.2.0 would think auth is enabled but encounter the broken connector; mismatch erodes trust
+  2. Bump to v3.3.0 (major change vibe) — REJECTED: 3.2.1 patch semver communicates "hotfix, not new feature" correctly
+  3. Yank v3.2.0 from marketplace — REJECTED: Cowork marketplace doesn't support yanks; bumping forward is the canonical path
+- **Rationale:** Patch semver (X.Y.PATCH) communicates "fix to existing version, no new feature." v3.2.1 release notes explicitly document the rollback so anyone who pulled v3.2.0 knows what changed. The pattern is now established for future rollbacks: metadata bump + explicit release notes describing the retraction.
+- **Status:** Accepted
+
+### ADR-011: Plugin updates for Raiyan books integration — pure markdown, no plugin.json bump
+- **Date:** 2026-05-25
+- **Decision:** When integrating the 2 Raiyan books into the vault (API repo: 21 new vault notes + 6 new RAG categories), the plugin received parallel updates: rewrote CFPB operational policy section in `skills/dispute-strategist/SKILL.md` + appended 6 new sections (Per-Account Flows / Letter Refresh / Dispute Timing / Distribution Sync / Combination Flows / Special Playbooks). Appended 5 new sections to `agents/dispute-letter-generator.md` (Composition Recipe / Style Guardrails / Round-Specific Opening Selection / Letter Tracking & Refresh / Snitch-Style). Enhanced Step 5 of `agents/credit-forensic-analyst.md` (per-account flow recommendation in strategy output). NO plugin.json version bump — these are agent guidance refresh, no tool surface or API contract change.
+- **Alternatives considered:**
+  1. Bump plugin to v3.3.0 to signal the major content update — REJECTED: confuses consumers (no new tools, no breaking changes; just better agent guidance from richer RAG)
+  2. Defer plugin updates and only update the RAG — REJECTED: agents need the new section structure to leverage the new RAG categories effectively
+  3. Single mega-update file (one new SKILL section instead of distributed) — REJECTED: violates the existing modular skill+agent structure
+- **Rationale:** Plugin version semver reflects USER-FACING changes (new commands, breaking API contracts, removed features). The Raiyan integration is a quality improvement of existing agents using newly-available RAG content. Users don't see "v3.3.0" but their `/dispute-letters` output composes better letters. Pattern established: agent guidance refreshes do NOT bump plugin version unless they change the tool surface.
+- **Status:** Accepted
+
+### ADR-012: Skip refactor of 5 letter templates in Raiyan integration
+- **Date:** 2026-05-25
+- **Decision:** Plan originally included refactoring 5 letter templates (`round1-initial-dispute-bureaus.md`, `round2-followup-dispute-bureaus.md`, `round3-bankruptcy-final.md`, `validate-debt-1.md`, `reinsertion-dispute.md`) with Heavy Metal + Plain English patterns. Decision: DEFER. The dispute-letter-generator agent's new Letter Composition Recipe + Style Guardrails sections enable dynamic composition from RAG patterns — the static templates become a fallback/scaffold, not the primary mechanism.
+- **Alternatives considered:**
+  1. Refactor all 5 templates in same change — REJECTED: too large for single commit (each template is 2-7 KB, hand-applying patterns is error-prone); risk of inconsistencies
+  2. Refactor only round1 + round2 as "exemplar templates" — REJECTED: half-done state worse than untouched
+  3. Replace templates entirely with dynamic generation, no static fallback — REJECTED: fallback is useful when RAG is unavailable (Step 0 check failed)
+- **Rationale:** The agent now composes dynamically with the patterns documented in `damage-chains.md`, `opening-techniques.md`, etc. Templates remain as scaffolds for cases where the agent needs a starting structure. A future ADR will refactor them when the agent's dynamic composition has been validated against multiple real dispute cases. Defer + dynamic composition is lower risk than batch refactor.
+- **Status:** Accepted (refactor deferred to future ADR with usage data)
+
+---
+
 ## Future ADRs to record (when relevant)
 
 The following decisions will be recorded as ADRs when the corresponding work begins:
 
-- ADR-008 (planned): `outcomes-logger` skill in the plugin and `POST /api/outcomes/log` endpoint on the API — anonymous capture of dispute outcomes for cross-user analytics
-- ADR-009 (planned): `GET /api/stats/success_rate` endpoint that returns aggregated stats to inform agent recommendations (requires ADR-008 to be in place first)
-- ADR-010 (planned): Settlement database endpoint (`GET /api/settlements/check`) and attorney-directory endpoint (`GET /api/referrals/attorneys`)
-- ADR-011 (planned): Auto-update regulatory pipeline — scheduled job on Railway that scrapes CFPB / FTC / state AG enforcement actions and updates the relevant vault chunks
+- ADR-013 (planned): `outcomes-logger` skill in the plugin and `POST /api/outcomes/log` endpoint on the API — anonymous capture of dispute outcomes for cross-user analytics
+- ADR-014 (planned): `GET /api/stats/success_rate` endpoint that returns aggregated stats to inform agent recommendations (requires ADR-013 to be in place first)
+- ADR-015 (planned): Settlement database endpoint (`GET /api/settlements/check`) and attorney-directory endpoint (`GET /api/referrals/attorneys`)
+- ADR-016 (planned): Auto-update regulatory pipeline — scheduled job on Railway that scrapes CFPB / FTC / state AG enforcement actions and updates the relevant vault chunks
+- ADR-017 (planned): Refactor 5 letter templates with Heavy Metal + Plain English patterns (deferred from ADR-012; trigger: after dispute-letter-generator has composed letters for ≥5 real cases and patterns prove stable)
+- ADR-018 (planned): /mcp auth re-enable round 2 — when Anthropic ships #219 fix broadly (4 gates per API repo ADR-012 must all be met)
