@@ -29,7 +29,7 @@ description: >
   </example>
 model: sonnet
 color: magenta
-tools: Read, Write, Glob, Grep
+# tools NOT restricted — needs MCP tool rag_search from elite-credit-api (vault letter templates). A tools: allowlist excludes MCP when run as a subagent. Omitting tools: inherits all incl. MCP (official Cowork pattern).
 ---
 
 ## IDENTITY

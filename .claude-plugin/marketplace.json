@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Marketplace for the Elite Credit AI plugin — credit-journey suite (repair / optimization / maintenance + financial education) for US consumers (Latino focus). Bilingual ES/EN intake, deep audit of tri-bureau credit reports, triple-output deliverables (technical forensic report + plain-language consumer summary + interactive HTML dashboard with PDF export), and a personalized post-audit interview that enriches dispute letters with the user's own narrative and evidence.",
-    "version": "3.3.0"
+    "version": "3.3.1"
   },
   "plugins": [
     {
       "name": "elite-credit-ai",
       "source": "./",
       "description": "Credit-journey suite for the full arc: forensic repair, score optimization, and maintenance + financial education. Bilingual ES/EN intake with multi-select goals and an 'analyze my report for me' option for users who don't know how to read their report. Audit of tri-bureau PDFs with cross-bureau and temporal detection. Triple output per audit: technical forensic report (.md) for credit-repair pros + plain-language consumer summary (.md) + interactive HTML dashboard the consumer opens in their browser (with one-click PDF export). Post-audit interactive Q&A captures the user's account-by-account narrative for personalized dispute letters. Strict copy hygiene: no internal mechanics surfaced to the user. 17 dispute-letter templates spanning FCRA, FDCPA, Reg F, plus 5 state-law overlays (CA, TX, NY, FL, others).",
-      "version": "3.3.0",
+      "version": "3.3.1",
       "author": {
         "name": "Luis Cabrera",
         "email": "luiscabreraf2@gmail.com"

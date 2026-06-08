@@ -33,7 +33,7 @@ description: >
   </example>
 model: opus
 color: yellow
-tools: Read, Write, Bash, Glob, Grep, Agent
+# tools NOT restricted — this agent needs MCP tools (audit_run, rag_search, health_check) from elite-credit-api. A tools: allowlist EXCLUDES MCP tools when this runs as a subagent, forcing the audit into fallback mode. Omitting tools: inherits all available tools incl. MCP (the official Cowork pattern for MCP-dependent agents).
 ---
 
 ## IDENTITY

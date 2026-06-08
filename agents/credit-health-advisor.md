@@ -27,7 +27,7 @@ description: >
   </example>
 model: sonnet
 color: cyan
-tools: Read, Glob, Grep
+# tools NOT restricted — needs MCP tool rag_search from elite-credit-api. A tools: allowlist excludes MCP when run as a subagent. Omitting tools: inherits all incl. MCP (official Cowork pattern).
 ---
 
 ## IDENTITY

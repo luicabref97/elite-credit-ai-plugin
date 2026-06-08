@@ -33,7 +33,7 @@ description: >
   </example>
 model: sonnet
 color: green
-tools: Read, Write, Glob, Grep
+# tools NOT restricted — needs MCP tool health_check from elite-credit-api (Step 0 env check). A tools: allowlist excludes MCP when run as a subagent. Omitting tools: inherits all incl. MCP (official Cowork pattern).
 ---
 
 ## IDENTITY

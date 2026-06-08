@@ -156,6 +156,21 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
 
 ---
 
+### ADR-020: v3.3.1 — agents must OMIT the `tools:` allowlist to keep MCP access as subagents
+- **Date:** 2026-06-07
+- **Decision:** Removed the `tools:` frontmatter allowlist from all six plugin agents (credit-forensic-analyst, flow-router, phase-tracker, credit-health-advisor, dispute-letter-generator, setup-checklist-orchestrator), replacing it with an explanatory comment. Bumped 3.3.0 → 3.3.1.
+- **Root cause (found by the first k=1 test of v3.3.0 on the Carly report):** when the orchestrator DELEGATES to an agent via the Task tool (which happens inside a Cowork project, where the project instructions push routing through flow-router/credit-forensic-analyst), the subagent ran the audit in FALLBACK mode — it could NOT call the `elite-credit-api` MCP tools (`audit_run`, `rag_search`, `health_check`) and could not read the plugin's bundled dashboard files. In a raw chat (no project) the orchestrator ran the pipeline inline with its own MCP tools, so the engine worked — which is why the earlier Carly run used the real 97-rule engine and this one did not. The agent self-reported this in `memoria_journey.json`: "Audit ejecutado en modo fallback ... las tools MCP audit_run/rag_search ... no estaban enlazados al subagente."
+- **Why the allowlist was the cause:** Claude Code docs — "Subagents inherit the internal tools and MCP tools available in the main conversation by default — UNLESS you explicitly restrict them. If you list SOME tools in `tools:`, you create an allowlist; tools NOT listed are denied." The agents listed `tools: Read, Write, Bash, Glob, Grep, Agent`, which silently excluded every `mcp__elite-credit-api__*` tool.
+- **Alternatives considered:**
+  1. Add `mcpServers: [elite-credit-api]` to each agent frontmatter — this is the *documented* Claude Code CLI mechanism (per the sub-agents docs). REJECTED as primary because ZERO official Cowork plugins use it; it is undocumented whether Cowork honors `mcpServers:` in agent frontmatter.
+  2. Add the MCP tools to the `tools:` allowlist by name (`mcp__elite-credit-api__audit_run`, …) — REJECTED: the exact naming format and wildcard support are undocumented; brittle.
+  3. **Omit `tools:` entirely (CHOSEN)** — the official Cowork plugins (`brand-voice/agents/conversation-analysis.md`, `discover-brand.md`) do exactly this, with comments like "tools not restricted — this agent needs MCP tools." It is both documented ("omit → inherit all incl. MCP") AND the observed production pattern in Cowork. Highest confidence.
+- **Trade-off:** omitting `tools:` means each agent inherits ALL available tools (every connected MCP server, not just elite-credit-api). Accepted — the same trade-off the official Cowork plugins accept; no harm beyond a larger tool surface.
+- **Status:** Accepted — pending re-test. NOT yet validated that the subagent now runs `audit_run` (the real engine) instead of fallback. This is the single change to verify in the next k=1 run.
+- **Still open (separate from this fix):** (a) the interactive HTML dashboard has never generated correctly in EITHER context (raw chat produced a `.md`, subagent could not read the bundled files) — the file-path/access problem is independent of MCP and unresolved; (b) the agent presented a "¿qué quieres que haga?" menu instead of running the flow automatically — likely a symptom of not being able to complete the work, to be re-checked after the MCP fix. The plugin does NOT use `${CLAUDE_PLUGIN_ROOT}` anywhere, so dashboard asset paths are relative and may not resolve from a subagent's CWD.
+
+---
+
 ## Future ADRs to record (when relevant)
 
 The following decisions will be recorded as ADRs when the corresponding work begins:
