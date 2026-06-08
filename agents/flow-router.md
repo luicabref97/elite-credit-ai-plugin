@@ -66,6 +66,40 @@ Try calling `health_check` from the `elite-credit-api` MCP server. If the call:
 
 STOP. Do NOT continue routing in this case.
 
+### Step 0.5: Probe Cowork Memoria (MANDATORY — run immediately after Step 0 health_check succeeds)
+
+`health_check` confirms the MCP server is reachable, but NOT that Cowork Memoria is writable. Memoria is a Cowork **Project** capability — it does not persist in a regular Claude.ai chat even when the connector happens to be reachable. This was the exact gap that let a real session run in chat-normal with zero cross-session persistence. Probe it explicitly with a write/read-back test:
+
+```
+probe_key = "_probe_" + <timestamp_ms>
+try:
+  remember({ probe_key: "ok" })
+  value = recall(probe_key)
+  if value == "ok":  MEMORIA_STATUS = "ok";  remember({ probe_key: null })   # cleanup
+  else:              MEMORIA_STATUS = "degraded"
+except:             MEMORIA_STATUS = "unavailable"
+```
+
+The timestamp in the key avoids a false positive from a cached value of a prior session.
+
+- **MEMORIA_STATUS == "ok"** — Memoria works. Proceed to Step 0.7.
+- **MEMORIA_STATUS == "degraded" or "unavailable"** — do NOT block (Memoria may simply be slow, or the user may legitimately accept an ephemeral session). Show this notice ONCE and ask:
+
+ES:
+> ⚠️ **Una cosa antes de empezar:** no pude confirmar que tu progreso se guardará entre sesiones. Probablemente estás en el chat regular de Claude.ai en vez de tu **Cowork project** con el plugin Elite Credit AI. La reparación de crédito es un proceso de varios meses — si no estás en el Cowork project, perderás el seguimiento (qué cartas mandaste, fechas de respuesta, en qué fase vas) al cerrar esta conversación.
+>
+> ¿Estás dentro de tu Cowork project?
+> - **Sí, continúa** → seguimos (puede que Memoria tarde un segundo en activar).
+> - **No / no estoy seguro** → te recomiendo abrir tu Cowork project con el plugin antes de empezar, para no perder el progreso.
+
+EN:
+> ⚠️ **One thing before we start:** I couldn't confirm your progress will save between sessions. You're likely in a regular Claude.ai chat instead of your **Cowork project** with the Elite Credit AI plugin. Credit repair is a multi-month process — outside the Cowork project you'll lose the tracking (which letters you sent, response dates, what phase you're in) when you close this chat.
+>
+> Are you inside your Cowork project? [ Yes, continue ] [ No / not sure → take me to setup ]
+
+- If the user says **No / not sure**: print the `NO_MCP_AVAILABLE` message from Step 0 (it has the exact steps to open the project / install the plugin) and STOP.
+- If the user says **Yes** (or cannot determine but wants to continue): proceed with a note `remember({ "memoria_probe_status": "degraded_user_confirmed_project" })` (if writable). Continue with degraded persistence — never hard-block a user who insists they are in the right place.
+
 ### Step 0.7: Ask language preference (BEFORE rendering any form or generating any user-facing text)
 
 Before showing the intake form or any other user-facing copy, ask the user which language they prefer. Default is Spanish (the plugin's primary audience is US Latino consumers); always offer English as the alternative.
@@ -331,7 +365,7 @@ Depending on the phase:
 
 | Routing | Next handoff |
 |---------|--------------|
-| Flow A Phase 1 | Walk user through setup checklist (freezes, opt-out, get reports). Save progress to Memoria. |
+| Flow A Phase 1 | **Spawn `setup-checklist-orchestrator`** for the 6 Phase 1 prep walkthroughs: download reports (annualcreditreport.com), activate the 3 bureau monitoring portals (MyEquifax / Experian / TransUnion), freeze secondary bureaus, create CFPB account, activate USPS Informed Delivery, clean personal info. Save `{current_phase: 1, setup_initiated: true}` to Memoria before the handoff. The orchestrator sets `setup_phase1_complete: true` when done and routes the user toward Phase 2. |
 | Flow A Phase 2 | Spawn `dispute-letter-generator` to start Round 1 — generator produces BOTH the bureau certified-mail letter AND the parallel CFPB filing draft (operational policy: CFPB-from-Round-1) |
 | Flow A Phase 3 | Educate on CFPB supervisor review of existing case + state AG complaint + NACA abogado consultation. CFPB case ALREADY exists from Round 1 — Phase 3 escalates within it, does not open new |
 | Flow A Phase 4 | Hand off to `credit-health-advisor` for building strategy |

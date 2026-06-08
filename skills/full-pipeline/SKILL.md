@@ -100,6 +100,22 @@ Compile all outputs into `output/forensic_report.md` with:
 - **Legal Citations** (referenced FCRA / FDCPA / Reg F / state-law sections)
 - **Legal Disclaimer Footer** — relay the API's `legal_disclaimer` once at the bottom (do not duplicate at every action — the API already prefixed each action)
 
+**Step 6 — Consumer dashboard (plain language)**
+
+Produce `output/consumer_dashboard.md` — same data as the forensic report, written at 8th-grade reading level in the user's language, no rule names / chunk counts / API versions. See `credit-forensic-analyst` Step 6 for the required sections and copy rules.
+
+**Step 6.5 — Interactive HTML dashboard (the consumer's main deliverable)**
+
+Emit `output/dashboard/` by copying the runtime files from `skills/ui-ux-credit/dashboard/` and generating `output/dashboard/data.js` from the audit JSONs (full data contract in `skills/ui-ux-credit/SKILL.md`; full procedure in `credit-forensic-analyst` Step 6.5). If the filesystem copy fails, use the fallback in `credit-forensic-analyst` Step 8 (paste `data.js` inline). This is the deliverable the consumer actually opens — never skip it silently.
+
+**Step 7 — Post-audit context interview**
+
+Run the per-account interview (see `credit-forensic-analyst` Step 7) and save `output/account_context.json`. Skipped answers are fine; what matters is opening the channel.
+
+**Step 8 — Handoff Gate (do NOT close before this passes)**
+
+Before any closing question, verify the three Step 8 conditions (dashboard files exist, `account_context.json` exists, language set) per `credit-forensic-analyst` Step 8. Then hand off: Flow A Phase 1 → `setup-checklist-orchestrator` (6 prep walkthroughs); Phase 2+ → `dispute-strategist` / `dispute-letter-generator`. NEVER jump straight to letter generation.
+
 ## Executive Summary Template
 
 ```markdown
@@ -110,7 +126,7 @@ Compile all outputs into `output/forensic_report.md` with:
 - **Bureaus Analyzed**: [list — TU, EQ, EX as applicable]
 - **Credit Scores**: TU: [score] | EQ: [score] | EX: [score]
 - **Total Accounts**: [count]
-- **Anomalies Found**: [total_anomalies] across [unique_rules_fired] of [total_registered_rules] rules
+- **Anomalies Found**: [total_anomalies] total
    - HIGH: [count] | MEDIUM: [count] | LOW: [count] | INFO: [count]
 - **Cross-bureau anomalies**: [count] (only present when other_bureau_reports uploaded)
 - **Temporal anomalies**: [count] (only present when previous_report_data uploaded)
@@ -130,7 +146,8 @@ Compile all outputs into `output/forensic_report.md` with:
 - ALWAYS check whether the user uploaded multiple reports — multi-bureau and temporal capabilities only fire when their data is provided.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of the report.
 - NEVER add a duplicate disclaimer to each anomaly — the API already prefixed `suggested_action`.
-- ALWAYS report `unique_rules_fired` / `total_registered_rules` so the user understands the scope.
+- **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("97 rules", "82 of 97"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.0.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md`, the HTML dashboard, or chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
+- ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the interactive `dashboard/` (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
 
 ## Output File Layout
 
@@ -143,7 +160,13 @@ output/
 ├── dashboard_data.json              ← score grades, factor grades, tips
 ├── audit_report.json                ← from /api/audit/run (97-rule output)
 ├── dispute_strategies.json          ← from dispute-strategist skill
-└── forensic_report.md               ← compiled human-readable summary
+├── forensic_report.md               ← technical report (pro-facing, Step 5)
+├── consumer_dashboard.md            ← plain-language summary (Step 6)
+├── account_context.json             ← per-account interview answers (Step 7)
+└── dashboard/                       ← interactive HTML dashboard (Step 6.5)
+    ├── runtime.html                 ← the consumer entry point (opens in browser)
+    ├── data.js                      ← generated per-audit data
+    └── (runtime assets copied from skills/ui-ux-credit/dashboard/)
 ```
 
 ## Latino-specific overlay

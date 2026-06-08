@@ -27,12 +27,13 @@ The `flow-router` agent will:
 You'll receive:
 
 - A friendly diagnosis with your score, what's going on with your credit, and what we found that needs attention.
-- Two outputs:
+- Three outputs:
+  - An **interactive dashboard** (`output/dashboard/runtime.html`) you open in your browser — your scores, accounts, and issues visualized, with one-click PDF export. This is the main thing you'll actually look at.
+  - A **consumer summary** (`output/consumer_dashboard.md`) — same analysis in plain language, readable on its own.
   - A **technical forensic report** (`output/forensic_report.md`) for credit-repair pros or for when you want depth.
-  - A **consumer dashboard** (`output/consumer_dashboard.md`) — same analysis but in plain language, ready to read on its own.
-- A short interactive Q&A at the end where I ask you about each problematic account — letters you've received, calls, what happened, documents you may have. This makes the dispute letters far stronger if you choose to proceed. You can skip any question.
+- A short interactive Q&A at the end where I ask you about each problematic account — letters you've received, calls, what happened, documents you may have. This makes the dispute letters far stronger. You can skip any question.
 - Your assigned flow + stage with a realistic timeline.
-- An offer to start the first concrete action right away.
+- **If you're in Repair (Flow A):** before any dispute letters, I walk you through a short Phase 1 setup — getting your reports, activating your bureau monitoring accounts, a CFPB account, USPS Informed Delivery, and cleaning up your personal info. This setup is what makes the disputes actually work. Letters come *after* the setup, not before.
 
 ## Coming back later
 

@@ -316,7 +316,51 @@ After BOTH `forensic_report.md` and `consumer_dashboard.md` are saved, transitio
 
 Skipped or unknown answers stay `null` or an empty string. The downstream `dispute-strategist` / `dispute-letter-generator` only ENRICH letters when context is present — missing context never blocks a letter.
 
-After Step 7, your audit-side work is done. Hand off to `flow-router` (if not already routed) or to the next agent in the journey (e.g., `dispute-strategist` for Phase 2 disputes).
+After Step 7, proceed to Step 8 (Handoff Gate). Do NOT ask any closing question before Step 8 verification passes.
+
+### Step 8: Handoff Gate (MANDATORY — this step IS the enforcement for Steps 6.5 and 7)
+
+Before asking the user ANY closing question (especially "¿quieres que genere las cartas?" / "shall I generate the letters?"), verify all three conditions below. This is a structural checkpoint that runs as its own step — not a soft RULES reminder. The closing question is only allowed AFTER all three pass.
+
+**Condition 1 — Interactive dashboard exists.**
+Verify `output/dashboard/runtime.html` and `output/dashboard/data.js` exist (Step 6.5 produced them). If missing:
+- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": false, "step_7_done": "<check>", "timestamp": "<now>", "reason_skipped": "dashboard files missing" } })`
+- Tell the user (ES): "Un momento — el dashboard interactivo no se generó todavía. Lo creo ahora." Then RE-EXECUTE Step 6.5 (including the filesystem fallback below if the copy fails), then return to Step 8.
+
+**Condition 2 — Post-audit interview ran.**
+Verify `output/account_context.json` exists with at least one entry. If missing:
+- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": true, "step_7_done": false, "timestamp": "<now>", "reason_skipped": "account_context missing" } })`
+- Tell the user (ES): "Antes de hablar de las cartas, te hago unas preguntas rápidas sobre tus cuentas — esto hace las cartas mucho más fuertes." Then RE-EXECUTE Step 7, then return to Step 8.
+
+**Condition 3 — Language is set.**
+Verify Cowork Memoria has `language` ("es" or "en"). If missing, set it to "es" (default) and save to Memoria.
+
+**Filesystem fallback for Step 6.5** (use inside Condition 1 if the copy from `skills/ui-ux-credit/dashboard/` fails):
+1. Try `Glob` to locate `runtime.html` elsewhere in the workspace — it may be at a different path.
+2. If the filesystem is fully blocked (permission denied / sandbox restriction), do NOT fail silently. Tell the user (ES): "No pude copiar el dashboard interactivo automáticamente (restricción de permisos en este entorno). Tu análisis completo está en `output/consumer_dashboard.md` y `output/forensic_report.md`. Para ver el dashboard visual: copia la carpeta `skills/ui-ux-credit/dashboard/` a `output/dashboard/` y reemplaza `data.js` con el contenido que te pego abajo." Then paste the generated `data.js` as a code block so the user can create it manually.
+3. Continue to Conditions 2-3 regardless — a filesystem failure on the dashboard does NOT block the interview or the handoff.
+
+**When all 3 conditions pass**, write the success trace:
+```
+remember({
+  "audit_completion_trace": {
+    "step_6_5_done": true,
+    "step_7_done": true,
+    "language_set": true,
+    "timestamp": "<ISO datetime>",
+    "audit_complete": true
+  }
+})
+```
+
+Then determine the handoff based on Memoria context:
+
+- **If `active_flow = A` AND `current_phase = 1`** (user freshly routed, still in preparation) AND `setup_phase1_complete` is not `true`: hand off to **`setup-checklist-orchestrator`** for the 6 Phase 1 prep walkthroughs (download reports, bureau monitoring portals, secondary freezes, CFPB account, USPS Informed Delivery, identity cleanup). The closing message points there:
+  > Tu auditoría está completa — tienes tu dashboard interactivo en `output/dashboard/runtime.html` y tu plan de acción. El siguiente paso NO es mandar cartas todavía: primero preparamos el terreno (cuentas en los buros, CFPB, limpieza de identidad) para que las cartas funcionen. Te guío paso a paso. ¿Empezamos?
+- **If `setup_phase1_complete = true`** OR the user is in Phase 2+: hand off to `dispute-strategist` / `dispute-letter-generator` for Round 1, OR to `flow-router` if routing is not yet established.
+- **If Memoria is unavailable** (no routing context): recommend the user run `/start-journey` so `flow-router` can route + trigger Phase 1 setup. Do NOT jump straight to letter generation.
+
+Only after the correct handoff is identified may you present the closing question.
 
 ## RULES
 
@@ -327,7 +371,9 @@ After Step 7, your audit-side work is done. Hand off to `flow-router` (if not al
 - ALWAYS auto-detect multi-bureau and temporal uploads — do not require explicit user instruction to use those features.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of `forensic_report.md`. In `consumer_dashboard.md`, use a friendly short disclaimer in plain language.
 - NEVER duplicate a disclaimer at every action — the API already prefixed each `suggested_action`.
-- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive HTML dashboard at `output/dashboard/`. Same data, three different presentations.
+- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive HTML dashboard at `output/dashboard/`. Same data, three different presentations. Failure to produce any of the three is a workflow error — use the Step 8 filesystem fallback, never skip silently.
+- **[HARD GATE]** NEVER ask the Step 8 closing question (or any "shall I generate the letters?" prompt) before all three Step 8 conditions are verified (dashboard files exist, `account_context.json` exists, language set). The closing question IS the gate — if any condition fails, re-run the missing step first. This is the structural enforcement for Steps 6.5 and 7. Not optional.
+- **[HARD GATE]** NEVER jump straight to letter generation after an audit. The correct sequence is: audit → dashboard → interview → Step 8 gate → (if Phase 1 not complete) `setup-checklist-orchestrator` for the 6 prep walkthroughs → only THEN dispute letters. Mailing letters before bureau accounts, CFPB account, and identity cleanup are ready makes the disputes weaker or invalid.
 - ALWAYS copy `runtime.html`, `pdf.html`, `direction-a.jsx`, `pdf-artboard.jsx`, `styles.css`, `styles-extras.css`, `print.css`, and `logos/` from `skills/ui-ux-credit/dashboard/` into `output/dashboard/`. SKIP `index.html`, `design-canvas.jsx`, `tweaks-panel.jsx` — those are design-mode tools.
 - ALWAYS generate `output/dashboard/data.js` per the data contract in `skills/ui-ux-credit/SKILL.md`. The five i18n helper functions (`window.t`, `window.getStatusLabel`, `window.getFlagLabel`, `window.getStatusColor`, `window.getGradeColor`) are copied verbatim from the reference `data.js`; only `window.AUDIT_DATA` changes per audit.
 - ALWAYS use the friendly translation table in `skills/ui-ux-credit/SKILL.md` to convert internal anomaly `rule_name` values to user-facing `title_es/en`. NEVER pass raw rule names through to the dashboard.

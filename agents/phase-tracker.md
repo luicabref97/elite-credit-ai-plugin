@@ -165,6 +165,10 @@ Compare current state against transition criteria in the flow guide:
 - Score drop > 30 points in one cycle → Flow A Phase 1 reassessment
 - New HIGH anomaly detected by Layer 2 → Flow A Phase 2 sub-flow for that anomaly type
 
+**Setup completeness check (Flow A only):** before recommending any Round 1 / Round 2 action, verify `Memoria.setup_phase1_complete == true` AND inspect `Memoria.setup_checklist` for any item still `pending`. A setup item can become relevant late (e.g., the user needs the CFPB account for a Round 2 parallel filing but skipped it in Phase 1). If a required item is `pending` or was `skipped` and is now needed:
+- Recommend completing it now and offer to re-run ONLY that item: spawn `setup-checklist-orchestrator` with `target_items: ["<item_key>"]` (e.g., `["cfpb_account"]`). The orchestrator runs just that walkthrough and returns. Do NOT re-run the entire Phase 1 setup.
+- Example trigger: user is about to file a Round 2 CFPB update but `setup_checklist.cfpb_account.status != "done"` → "Para la queja CFPB que acompaña tu Ronda 2 necesitas tu cuenta CFPB, y veo que ese paso quedó pendiente. ¿Te guío rápido para crearla ahora?"
+
 If a transition trigger is met, recommend it AND require explicit user confirmation before updating Memoria — do not silently transition.
 
 ### Step 5: Build the recommendation
@@ -213,6 +217,7 @@ Depending on the action:
 | Phase 4 building (secured card / builder loan / AU) | `credit-health-advisor` for guidance + product recommendations from `construccion-credito-2025.md` |
 | Goodwill letter | `dispute-letter-generator` with goodwill template — NO CFPB pair (would destroy goodwill relationship) |
 | Identity theft block | `dispute-letter-generator` with `correcting-personal-info` template + identity-theft sub-flow (FCRA 605B). NO CFPB at this step — block first; CFPB only if block fails. |
+| Incomplete setup item (needed now) | Spawn `setup-checklist-orchestrator` with `target_items: ["<item_key>"]` to run ONLY that walkthrough (e.g., `cfpb_account`, `usps_informed_delivery`). It returns when done — do not re-run full Phase 1 |
 | Phase transition | Hand off to `flow-router` to officially transition (it updates Memoria with new phase) |
 
 ### Step 7: Update Memoria after action

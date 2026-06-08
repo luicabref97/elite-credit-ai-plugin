@@ -139,6 +139,23 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
 
 ---
 
+### ADR-019: Phase 1 setup orchestration + journey gates (P16/P17/P18 fixes from Carly real-world test)
+- **Date:** 2026-06-07
+- **Decision:** Three coordinated fixes after a real end-to-end test (Carly Tarazona report, score 494-499, 25 collections) exposed UX gaps:
+  1. **(P16) Cowork Memoria probe** — added Step 0.5 to `flow-router` (write/read-back test with a timestamped key) to detect chat-normal vs Cowork Project. `health_check` alone only proves the MCP connector is reachable, not that Memoria persists. On degraded/unavailable, the user is asked explicitly and warned about losing cross-session tracking — but never hard-blocked.
+  2. **(P17) Step 8 Handoff Gate in `credit-forensic-analyst`** — converted the soft "ALWAYS produce the dashboard / run the interview" RULES bullets into a structural Step 8 with three verifiable conditions (dashboard files exist, `account_context.json` exists, language set) plus an `audit_completion_trace` written to Memoria for post-hoc observability. The closing "shall I generate letters?" question is gated behind all three passing. Includes an explicit filesystem fallback (paste `data.js` inline if the copy from `skills/ui-ux-credit/dashboard/` fails).
+  3. **(P18) New `setup-checklist-orchestrator` agent** — owns Flow A Phase 1 with 6 sequential, skippable, resumable walkthroughs: download reports (annualcreditreport.com), activate the 3 bureau consumer monitoring portals (MyEquifax/Experian/TransUnion, for dispute-status tracking — distinct from the yearly report download), freeze secondary bureaus, create CFPB account, activate USPS Informed Delivery, clean personal information (Clean-ID-First). State lives in `Memoria.setup_checklist` as `{item: {status, skipped_reason, completed_at}}`. Re-invocable by `phase-tracker` via `target_items` for a single incomplete item.
+- **Alternatives considered:**
+  1. Add another RULES bullet to force the dashboard (P17) — REJECTED: 18 existing bullets did not prevent the skip; a 19th declarative rule would not either. A numbered structural step with verifiable conditions changes LLM behavior where a rule does not.
+  2. Detect Cowork Project via environment metadata — REJECTED: Claude Code exposes no `CLAUDE_PROJECT` signal from inside a plugin; the empirical Memoria write/read probe is the only available mechanism.
+  3. Put the 6 setup walkthroughs in the RAG vault — REJECTED this cycle: the vault lacks bureau-portal / USPS / CFPB account-creation content, and adding vault chunks means backend edits + re-deploy + re-index (scope creep). Inline walkthroughs in the agent ship now; vault migration is a future option.
+  4. Expand `flow-router` Step 8 inline instead of a new agent — REJECTED: setup deserves first-class, resumable, reusable ownership; inlining would bloat flow-router and prevent `phase-tracker` from re-running a single item.
+- **Rationale:** The plugin's intended UX is audit → visual dashboard → interview → guided Phase 1 prep → disputes. The Carly run collapsed that to audit → raw .md files → premature "want letters?" The fixes restore the intended sequence with structural enforcement (not soft rules), observability for the next regression, and a dedicated setup agent that handles the multi-month journey's foundation. No backend / API changes — pure plugin markdown. Version bumped 3.2.1 → 3.3.0 (minor): this adds a NEW agent (`setup-checklist-orchestrator`) = a new user-facing capability, which is a genuine minor-version change under semver — distinct from the ADR-011 precedent (pure agent-guidance refreshes don't bump). The bump is also a practical deployment requirement: the plugin is distributed via GitHub marketplace and `/plugin update` compares versions, so without the bump Cowork would report "already up to date" and never pull the changes. Bumped in both `plugin.json` and `marketplace.json` (metadata.version + plugins[0].version). NOTE: `markitdown` was evaluated for PDF extraction and REJECTED — it drops the 84-month payment-history grid and the DOFD-in-comments data that the audit engine needs; Claude Vision native PDF reading remains the parser path (see `credit-report-parser` Step 1).
+- **Status:** Accepted
+- **Verification:** pass^k k=3 with Carly's PDF — (k1) audit reaches Step 8, dashboard HTML generated, interview runs, no premature letter question; (k2) Memoria probe behaves correctly in Project vs chat-normal; (k3) setup-checklist-orchestrator runs the 6 items in order, resumes mid-checklist, records skip reasons, hands off at completion.
+
+---
+
 ## Future ADRs to record (when relevant)
 
 The following decisions will be recorded as ADRs when the corresponding work begins:
