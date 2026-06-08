@@ -33,13 +33,17 @@ NOT every consumer needs Flow A. Many come for optimization, education, or maint
 1. On first interaction, run the `flow-router` agent (or invoke `/start-journey`). It reads any prior state from Cowork Memoria, may run the Layer 2 audit if reports are uploaded, consults the Master Agent Flow Guide via the RAG, and assigns a flow + phase. It also persists the routing in Memoria so subsequent sessions can resume.
 2. On returning sessions, run `phase-tracker` (or `/next-step`) to recover the journey state and suggest today's next action. Do not re-route unless state is missing or `flow-router` recommends a transition.
 3. Use the executing agents only after routing is established:
-   - `credit-forensic-analyst` for audits
+   - `credit-forensic-analyst` for audits. Produces THREE deliverables every time — `output/forensic_report.md` (technical), `output/consumer_dashboard.md` (plain language), and the interactive `output/dashboard/runtime.html` (what the consumer opens in their browser, with PDF export). It runs a Step 8 gate that verifies all three plus the post-audit interview BEFORE asking any closing question.
+   - `setup-checklist-orchestrator` for Flow A Phase 1 prep — the 6 setup walkthroughs (download reports from annualcreditreport.com, activate the 3 bureau monitoring portals MyEquifax/Experian/TransUnion, freeze secondary bureaus, create a CFPB account, activate USPS Informed Delivery, clean personal info). Resumable and skippable; tracked in Memoria.
    - `credit-health-advisor` for Q&A and education
-   - `dispute-letter-generator` for letters (only when Flow A indicates a dispute is appropriate)
+   - `phase-tracker` for returning-session continuity (or `/next-step`)
+   - `dispute-letter-generator` for letters — only AFTER Phase 1 setup is complete and Flow A indicates a dispute is appropriate
+
+4. **Flow A (Repair) sequence is fixed:** audit → dashboard → post-audit interview → **Phase 1 setup via `setup-checklist-orchestrator`** → only THEN dispute letters. The agents enforce this gate; do NOT jump straight from the audit to "shall I generate the letters?". Mailing letters before the consumer's bureau accounts, CFPB account, and identity cleanup are ready makes the disputes weaker or invalid.
 
 ### Connection guardrails (MANDATORY)
 
-Before any agent does substantive work, it must verify the `elite-credit-api` MCP server is reachable. Each plugin agent has an internal `Step 0: Verify environment` block that calls `health_check` first.
+Before any agent does substantive work, it must verify the `elite-credit-api` MCP server is reachable. Each plugin agent has an internal `Step 0: Verify environment` block that calls `health_check` first. `flow-router` additionally runs a `Step 0.5` Cowork Memoria write/read probe — `health_check` only proves the connector is reachable, not that Memoria persists (which requires a real Cowork project, not a raw chat). If Memoria is not writable, the agent warns the user that cross-session progress will not be saved and asks whether they are inside their Cowork project before proceeding.
 
 If the MCP is **not** reachable:
 
