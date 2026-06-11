@@ -22,8 +22,9 @@
   --green:#206540; --green-soft:#5fa87a;
   --red:#B03642; --red-soft:#d97082;
   --bg:#06090f; --bg-2:#0c1220;
-  --text:#e6dfce; --text-dim:#98a0b3; --text-faint:#5d6680;
+  --text:#e6dfce; --text-dim:#98a0b3; --text-faint:#7e87a1; /* V-008: was #5d6680 (3.2:1, AA fail on small text) */
 }
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;line-height:1.55}
@@ -158,6 +159,12 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
   .hero-grid,.scores-row,.factors,.shelf,.anomaly-grid,.timeline,.context-grid{grid-template-columns:1fr}
   .wrap{padding:20px}
 }
+@media(pointer:coarse){ /* V-010: 44px touch targets where copy invites touch */
+  .lang-toggle button{min-height:44px;padding:10px 16px}
+  .chip{min-height:44px;padding:10px 16px}
+  .fsd-item{min-height:44px}
+  .acct-chip{min-height:48px}
+}
 
 /* ============================================================
    DEDICATED PDF ARTBOARD — ported from pdf-artboard.jsx + styles.css:677-729.
@@ -189,12 +196,12 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 .pdf-an-sev.sev-MEDIUM{background:#f0e2b5;color:#5a4a18}
 .pdf-an-sev.sev-LOW{background:#d8eede;color:#1a4d2c}
 .pdf-an-cite{color:#999}
-.pdf-anomaly h4{font-size:13px;margin-bottom:6px;color:#1a1a1a;font-weight:600}
+.pdf-anomaly h3{font-size:13px;margin-bottom:6px;color:#1a1a1a;font-weight:600}
 .pdf-anomaly p{font-size:11px;color:#444;margin-bottom:6px}
 .pdf-an-action{font-size:10px;color:#5a4a18}
 .pdf-plan-impact{font-size:12px;color:#1a1a1a;margin-bottom:14px;padding:10px 14px;background:#f0e9d6;border-radius:3px}
 .pdf-plan-block{margin-bottom:14px}
-.pdf-plan-block h4{font-size:11px;color:#846720;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.pdf-plan-block h3{font-size:11px;color:#846720;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
 .pdf-plan-block ul{margin:0;padding:0;list-style:none}
 .pdf-plan-block li{padding:8px 0;border-bottom:1px dashed #d8c98a}
 .pdf-plan-block li>*{display:block}
@@ -417,7 +424,7 @@ function scoreGauge(s,p){
   const gLabel={POOR:t("POBRE","POOR"),FAIR:t("REGULAR","FAIR"),GOOD:t("BUENO","GOOD"),VERY_GOOD:t("MUY BUENO","VERY GOOD"),EXCELLENT:t("EXCELENTE","EXCELLENT")}[s.grade]||s.grade;
   let bg="",fg="";
   segs.forEach(([a,b,c])=>{bg+=`<path d="${arcPath(a,b)}" fill="none" stroke="${c}" stroke-width="${stroke}" stroke-linecap="round" opacity=".16"/>`;const fe=Math.min(b,fill);if(fe>a)fg+=`<path d="${arcPath(a,fe)}" fill="none" stroke="${c}" stroke-width="${stroke}" stroke-linecap="round"/>`;});
-  return `<svg width="300" height="190" viewBox="0 0 320 200">${bg}${fg}
+  return `<svg width="300" height="190" viewBox="0 0 320 200" role="img" aria-label="${s.score} · ${gLabel}">${bg}${fg}
     <circle cx="${dotX}" cy="${dotY}" r="11" fill="#0c1220" stroke="${color}" stroke-width="3"/>
     <circle cx="${dotX}" cy="${dotY}" r="4" fill="#f0e5cc"/>
     <text x="${cx}" y="${cy-32}" text-anchor="middle" fill="#f0e5cc" font-size="62" font-weight="700" letter-spacing="-2">${shown}</text>
@@ -444,7 +451,7 @@ function factorDonut(p){
   let center;
   if(SEL_FACTOR!==null){const sf=F[SEL_FACTOR];center=`<text x="${cx}" y="${cy-30}" text-anchor="middle" fill="#7a8499" font-size="10" letter-spacing="2">${t("PESO","WEIGHT")}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" fill="${gradeColor(sf.grade)}" font-size="52" font-weight="700" letter-spacing="-2">${sf.weight_vs}%</text>`;}
   else center=`<text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#98a0b3" font-size="11" letter-spacing="2" font-weight="600">${t("5 FACTORES","5 FACTORS")}</text><text x="${cx}" y="${cy+16}" text-anchor="middle" fill="#5d6680" font-size="10">${t("Haz click para explorar","Click any to explore")}</text>`;
-  return `<svg width="380" height="400" viewBox="0 0 400 400" onclick="selectFactor(null)"><rect width="400" height="400" fill="transparent"/>${paths}${center}</svg>`;
+  return `<svg width="380" height="400" viewBox="0 0 400 400" aria-hidden="true" onclick="selectFactor(null)"><rect width="400" height="400" fill="transparent"/>${paths}${center}</svg>`;
 }
 function factorSide(){
   const F=AUDIT_DATA.factor_grades;
@@ -453,14 +460,14 @@ function factorSide(){
     head=`<div class="fsd-side-head"><div class="fsd-grade" style="color:${c};border-color:${c}">${sf.grade}</div><div><div class="fsd-name">${t(sf.factor_es,sf.factor_en)}</div><div class="fsd-meta"><span style="color:${c}">${sf.weight_vs}%</span><span class="d">·</span>${t("de tu score","of your score")}</div></div></div>`;
     text=`<p class="fsd-text">${t(sf.explanation_es,sf.explanation_en)}</p>`;}
   else head=`<h3>${t("Qué está moviendo tu score","What's moving your score")}</h3><p class="intro-p">${t("Cinco factores. Haz click en cualquier sección para ver por qué afecta tu score.","Five factors. Click any segment to see why it affects your score.")}</p>`;
-  let list=F.map((f,i)=>`<button class="fsd-item ${i===SEL_FACTOR?'active':''}" data-fid="fsd-${i}" onclick="selectFactor(${i})"><span class="fsd-dot" style="background:${gradeColor(f.grade)}"></span><span class="fsd-li-name">${t(f.factor_es,f.factor_en)}</span><span class="fsd-li-grade" style="color:${gradeColor(f.grade)}">${f.grade}</span><span class="fsd-li-weight">${f.weight_vs}%</span></button>`).join("");
+  let list=F.map((f,i)=>`<button class="fsd-item ${i===SEL_FACTOR?'active':''}" aria-pressed="${i===SEL_FACTOR}" data-fid="fsd-${i}" onclick="selectFactor(${i})"><span class="fsd-dot" style="background:${gradeColor(f.grade)}"></span><span class="fsd-li-name">${t(f.factor_es,f.factor_en)}</span><span class="fsd-li-grade" style="color:${gradeColor(f.grade)}">${f.grade}</span><span class="fsd-li-weight">${f.weight_vs}%</span></button>`).join("");
   const bc=SEL_FACTOR!==null?gradeColor(F[SEL_FACTOR].grade)+"55":"#1a2438";
   return `<div class="fsd-side" style="border-color:${bc}">${head}${text}<div class="fsd-list">${list}</div></div>`;
 }
 
 // ============ ACCOUNTS ============
 function accountsShelf(){
-  const list=AUDIT_DATA.accounts.map((a,i)=>{const c=statusColor(a.group);return `<button class="acct-chip" style="${i===SEL_ACCT?`border-color:${c.border};background:rgba(255,255,255,.02)`:''}" data-fid="acct-${i}" onclick="selectAcct(${i})"><span class="acc-creditor">${a.creditor}</span><span class="acc-status" style="color:${c.text}">${t(a.friendly_status_es,a.friendly_status_en)}</span></button>`;}).join("");
+  const list=AUDIT_DATA.accounts.map((a,i)=>{const c=statusColor(a.group);return `<button class="acct-chip" style="${i===SEL_ACCT?`border-color:${c.border};background:rgba(255,255,255,.02)`:''}" aria-pressed="${i===SEL_ACCT}" data-fid="acct-${i}" onclick="selectAcct(${i})"><span class="acc-creditor">${a.creditor}</span><span class="acc-status" style="color:${c.text}">${t(a.friendly_status_es,a.friendly_status_en)}</span></button>`;}).join("");
   const a=AUDIT_DATA.accounts[SEL_ACCT],c=statusColor(a.group);
   const rows=[["eq","Equifax"],["ex","Experian"],["tu","TransUnion"]].map(([k,n])=>`<div class="sd-bureau"><span class="sdb-name">${n}</span><span class="sdb-bal">${money(a.balance[k])}</span><span class="sdb-stat" style="color:${bureauStatusColor(a.status_per_bureau[k])}">${statusLabel(a.status_per_bureau[k])}</span></div>`).join("");
   const grid=[[t("Abierta","Opened"),a.opened||"—"],[t("Última actividad","Last activity"),a.last_activity||"—"],[t("Límite","Limit"),a.limit?money(a.limit):"—"],[t("Mensual","Monthly"),a.monthly?money(a.monthly):"—"]];
@@ -479,10 +486,10 @@ function accountsShelf(){
 function anomalies(){
   const list=FILTER==="all"?AUDIT_DATA.anomalies:AUDIT_DATA.anomalies.filter(a=>a.severity===FILTER);
   const counts={all:AUDIT_DATA.anomalies.length,HIGH:AUDIT_DATA.anomalies.filter(a=>a.severity==="HIGH").length,MEDIUM:AUDIT_DATA.anomalies.filter(a=>a.severity==="MEDIUM").length};
-  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" data-fid="chip-${k}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
+  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" aria-pressed="${FILTER===k}" data-fid="chip-${k}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
   const cards=list.map(a=>{const sc={HIGH:"#B03642",MEDIUM:"#C4A052",LOW:"#5fa87a"}[a.severity],sl={HIGH:t("Crítico","Critical"),MEDIUM:t("Mediano","Medium"),LOW:t("Menor","Minor")}[a.severity];
     return `<div class="anomaly" style="border-left-color:${sc}"><div class="an-head"><span class="an-sev" style="color:${sc};border-color:${sc}">${sl}</span><span class="an-cite">${a.citation}</span></div>
-      <h4 class="an-title">${t(a.title_es,a.title_en)}</h4><p class="an-explain">${t(a.explanation_es,a.explanation_en)}</p>
+      <h3 class="an-title">${t(a.title_es,a.title_en)}</h3><p class="an-explain">${t(a.explanation_es,a.explanation_en)}</p>
       <div class="an-affected">${a.affected.map(x=>`<span class="an-chip">${x}</span>`).join("")}</div>
       <div class="an-action"><span class="an-action-lbl">${t("Lo que vamos a hacer","What we'll do")}</span><span class="an-action-text">${t(a.action_es,a.action_en)}</span></div></div>`;}).join("");
   return `<div class="filter-chips">${chips}</div><div class="anomaly-grid">${cards}</div>`;
@@ -514,10 +521,10 @@ function pdfArtboard(){
   const factors=D.factor_grades.map(f=>`<tr><td>${t(f.factor_es,f.factor_en)}</td><td>${f.weight_vs}%</td><td class="pdf-grade">${f.grade}</td><td>${t(f.explanation_es,f.explanation_en)}</td></tr>`).join("");
   const accounts=D.accounts.map(a=>`<tr><td>${a.creditor}</td><td>${t(a.type_es,a.type_en)}</td><td>${money(a.balance.eq)}</td><td>${money(a.balance.ex)}</td><td>${money(a.balance.tu)}</td><td>${t(a.friendly_status_es,a.friendly_status_en)}</td></tr>`).join("");
   const issues=D.anomalies.map((a,i)=>`<div class="pdf-anomaly"><div class="pdf-an-head"><span class="pdf-an-num">${String(i+1).padStart(2,"0")}</span><span class="pdf-an-sev sev-${a.severity}">${a.severity}</span><span class="pdf-an-cite">${a.citation}</span></div>
-    <h4>${t(a.title_es,a.title_en)}</h4><p>${t(a.explanation_es,a.explanation_en)}</p>
+    <h3>${t(a.title_es,a.title_en)}</h3><p>${t(a.explanation_es,a.explanation_en)}</p>
     <p class="pdf-an-action"><strong>${t("Acción","Action")}:</strong> ${t(a.action_es,a.action_en)}</p></div>`).join("");
   const plan=[["this_week",t("Esta semana","This week")],["weeks_2_3",t("Semanas 2-3","Weeks 2–3")],["weeks_4_8",t("Semanas 4-8","Weeks 4–8")],["weeks_8_18",t("Semanas 8-18","Weeks 8–18")]].map(([k,lbl])=>
-    `<div class="pdf-plan-block"><h4>${lbl}</h4><ul>${D.action_plan[k].map(s=>`<li><strong>${t(s.action_es,s.action_en)}</strong><span class="pdf-plan-reason">${t(s.reason_es,s.reason_en)}</span><span class="pdf-plan-effort">${typeof s.effort==="object"?t(s.effort.es,s.effort.en):s.effort}</span></li>`).join("")}</ul></div>`).join("");
+    `<div class="pdf-plan-block"><h3>${lbl}</h3><ul>${D.action_plan[k].map(s=>`<li><strong>${t(s.action_es,s.action_en)}</strong><span class="pdf-plan-reason">${t(s.reason_es,s.reason_en)}</span><span class="pdf-plan-effort">${typeof s.effort==="object"?t(s.effort.es,s.effort.en):s.effort}</span></li>`).join("")}</ul></div>`).join("");
   return `<div class="pdf-page">
     <header class="pdf-head"><div class="pdf-brand">ELITE CREDIT AI</div>
       <div class="pdf-meta"><div>${t("Reporte de Auditoría de Crédito","Credit Audit Report")}</div>
@@ -547,7 +554,7 @@ function render(){
   const _fid=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.fid:null;
   document.getElementById("app").innerHTML=`
   <div class="topbar"><div class="brand">Elite Credit <span>AI</span></div>
-    <div class="lang-toggle"><button class="${LANG==='es'?'active':''}" data-fid="lang-es" onclick="setLang('es')">ES</button><button class="${LANG==='en'?'active':''}" data-fid="lang-en" onclick="setLang('en')">EN</button></div></div>
+    <div class="lang-toggle"><button class="${LANG==='es'?'active':''}" aria-pressed="${LANG==='es'}" data-fid="lang-es" onclick="setLang('es')">ES</button><button class="${LANG==='en'?'active':''}" aria-pressed="${LANG==='en'}" data-fid="lang-en" onclick="setLang('en')">EN</button></div></div>
   <header class="hero">
     <div class="hero-top"><div class="flow-chip">${t("FLUJO","FLOW")} ${D.routing.flow}<span class="dot">·</span>${t(D.routing.phase_name_es,D.routing.phase_name_en).toUpperCase()}</div><div class="audit-date">${D.user.audit_date}</div></div>
     <div class="hero-grid">
