@@ -453,14 +453,14 @@ function factorSide(){
     head=`<div class="fsd-side-head"><div class="fsd-grade" style="color:${c};border-color:${c}">${sf.grade}</div><div><div class="fsd-name">${t(sf.factor_es,sf.factor_en)}</div><div class="fsd-meta"><span style="color:${c}">${sf.weight_vs}%</span><span class="d">·</span>${t("de tu score","of your score")}</div></div></div>`;
     text=`<p class="fsd-text">${t(sf.explanation_es,sf.explanation_en)}</p>`;}
   else head=`<h3>${t("Qué está moviendo tu score","What's moving your score")}</h3><p class="intro-p">${t("Cinco factores. Haz click en cualquier sección para ver por qué afecta tu score.","Five factors. Click any segment to see why it affects your score.")}</p>`;
-  let list=F.map((f,i)=>`<button class="fsd-item ${i===SEL_FACTOR?'active':''}" onclick="selectFactor(${i})"><span class="fsd-dot" style="background:${gradeColor(f.grade)}"></span><span class="fsd-li-name">${t(f.factor_es,f.factor_en)}</span><span class="fsd-li-grade" style="color:${gradeColor(f.grade)}">${f.grade}</span><span class="fsd-li-weight">${f.weight_vs}%</span></button>`).join("");
+  let list=F.map((f,i)=>`<button class="fsd-item ${i===SEL_FACTOR?'active':''}" data-fid="fsd-${i}" onclick="selectFactor(${i})"><span class="fsd-dot" style="background:${gradeColor(f.grade)}"></span><span class="fsd-li-name">${t(f.factor_es,f.factor_en)}</span><span class="fsd-li-grade" style="color:${gradeColor(f.grade)}">${f.grade}</span><span class="fsd-li-weight">${f.weight_vs}%</span></button>`).join("");
   const bc=SEL_FACTOR!==null?gradeColor(F[SEL_FACTOR].grade)+"55":"#1a2438";
   return `<div class="fsd-side" style="border-color:${bc}">${head}${text}<div class="fsd-list">${list}</div></div>`;
 }
 
 // ============ ACCOUNTS ============
 function accountsShelf(){
-  const list=AUDIT_DATA.accounts.map((a,i)=>{const c=statusColor(a.group);return `<button class="acct-chip" style="${i===SEL_ACCT?`border-color:${c.border};background:rgba(255,255,255,.02)`:''}" onclick="selectAcct(${i})"><span class="acc-creditor">${a.creditor}</span><span class="acc-status" style="color:${c.text}">${t(a.friendly_status_es,a.friendly_status_en)}</span></button>`;}).join("");
+  const list=AUDIT_DATA.accounts.map((a,i)=>{const c=statusColor(a.group);return `<button class="acct-chip" style="${i===SEL_ACCT?`border-color:${c.border};background:rgba(255,255,255,.02)`:''}" data-fid="acct-${i}" onclick="selectAcct(${i})"><span class="acc-creditor">${a.creditor}</span><span class="acc-status" style="color:${c.text}">${t(a.friendly_status_es,a.friendly_status_en)}</span></button>`;}).join("");
   const a=AUDIT_DATA.accounts[SEL_ACCT],c=statusColor(a.group);
   const rows=[["eq","Equifax"],["ex","Experian"],["tu","TransUnion"]].map(([k,n])=>`<div class="sd-bureau"><span class="sdb-name">${n}</span><span class="sdb-bal">${money(a.balance[k])}</span><span class="sdb-stat" style="color:${bureauStatusColor(a.status_per_bureau[k])}">${statusLabel(a.status_per_bureau[k])}</span></div>`).join("");
   const grid=[[t("Abierta","Opened"),a.opened||"—"],[t("Última actividad","Last activity"),a.last_activity||"—"],[t("Límite","Limit"),a.limit?money(a.limit):"—"],[t("Mensual","Monthly"),a.monthly?money(a.monthly):"—"]];
@@ -479,7 +479,7 @@ function accountsShelf(){
 function anomalies(){
   const list=FILTER==="all"?AUDIT_DATA.anomalies:AUDIT_DATA.anomalies.filter(a=>a.severity===FILTER);
   const counts={all:AUDIT_DATA.anomalies.length,HIGH:AUDIT_DATA.anomalies.filter(a=>a.severity==="HIGH").length,MEDIUM:AUDIT_DATA.anomalies.filter(a=>a.severity==="MEDIUM").length};
-  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
+  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" data-fid="chip-${k}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
   const cards=list.map(a=>{const sc={HIGH:"#B03642",MEDIUM:"#C4A052",LOW:"#5fa87a"}[a.severity],sl={HIGH:t("Crítico","Critical"),MEDIUM:t("Mediano","Medium"),LOW:t("Menor","Minor")}[a.severity];
     return `<div class="anomaly" style="border-left-color:${sc}"><div class="an-head"><span class="an-sev" style="color:${sc};border-color:${sc}">${sl}</span><span class="an-cite">${a.citation}</span></div>
       <h4 class="an-title">${t(a.title_es,a.title_en)}</h4><p class="an-explain">${t(a.explanation_es,a.explanation_en)}</p>
@@ -542,9 +542,12 @@ function render(){
   const D=AUDIT_DATA;
   const greeting=t(`${D.user.first_name}, este es tu crédito, explicado.`,`${D.user.first_name}, here is your credit, explained.`);
   document.documentElement.lang=LANG;
+  // V-001: full re-render must not lose list scroll nor keyboard focus
+  const _sl=document.querySelector(".shelf-list"),_st=_sl?_sl.scrollTop:0;
+  const _fid=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.fid:null;
   document.getElementById("app").innerHTML=`
   <div class="topbar"><div class="brand">Elite Credit <span>AI</span></div>
-    <div class="lang-toggle"><button class="${LANG==='es'?'active':''}" onclick="setLang('es')">ES</button><button class="${LANG==='en'?'active':''}" onclick="setLang('en')">EN</button></div></div>
+    <div class="lang-toggle"><button class="${LANG==='es'?'active':''}" data-fid="lang-es" onclick="setLang('es')">ES</button><button class="${LANG==='en'?'active':''}" data-fid="lang-en" onclick="setLang('en')">EN</button></div></div>
   <header class="hero">
     <div class="hero-top"><div class="flow-chip">${t("FLUJO","FLOW")} ${D.routing.flow}<span class="dot">·</span>${t(D.routing.phase_name_es,D.routing.phase_name_en).toUpperCase()}</div><div class="audit-date">${D.user.audit_date}</div></div>
     <div class="hero-grid">
@@ -569,6 +572,8 @@ function render(){
     <div class="disclaimer">${t("Este análisis es educativo, no asesoría legal. Para acción legal formal, consulta NACA (consumeradvocates.org) o un abogado de ley del consumidor en tu estado.","This analysis is educational, not legal advice. For formal legal action, consult NACA (consumeradvocates.org) or a consumer-law attorney in your state.")}</div>
   </footer>
   <div class="pdf-render-host">${pdfArtboard()}</div>`;
+  const _sl2=document.querySelector(".shelf-list");if(_sl2)_sl2.scrollTop=_st;
+  if(_fid){const _el=document.querySelector('[data-fid="'+_fid+'"]');if(_el)_el.focus();}
 }
 
 // ============ ENTRANCE ANIMATIONS — rAF, same durations/easing as the React source ============
