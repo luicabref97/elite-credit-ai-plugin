@@ -171,11 +171,12 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
    Hidden on screen; revealed ONLY during print (print.css pattern).
    ============================================================ */
 .pdf-render-host{display:none}
-.pdf-page{background:#fff;color:#14191e;font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.5}
+.pdf-page{background:#fff;color:#14191e;font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.5;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact} /* V-013: keep severity pills/table bands when printing */
 .pdf-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
 .pdf-brand{font-weight:800;letter-spacing:4px;font-size:14px;color:#846720}
 .pdf-meta{text-align:right;font-size:12px}
-.pdf-meta-sub{font-size:10px;color:#777;letter-spacing:.5px;margin-top:2px}
+.pdf-meta-sub{font-size:10px;color:#777;margin-top:2px}
 .pdf-rule{height:2px;background:#846720;margin:10px 0 24px}
 .pdf-section{margin-bottom:28px}
 .pdf-section h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#846720;margin-bottom:12px;font-weight:700}
@@ -207,7 +208,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 .pdf-plan-block li>*{display:block}
 .pdf-plan-block li strong{font-size:12px;color:#1a1a1a}
 .pdf-plan-reason{font-size:11px;color:#555;margin-top:2px}
-.pdf-plan-effort{font-size:10px;color:#888;letter-spacing:.5px;margin-top:2px}
+.pdf-plan-effort{font-size:10px;color:#888;margin-top:2px}
 .pdf-foot{margin-top:32px}
 .pdf-foot p{font-size:10px;color:#666;line-height:1.55;margin-bottom:6px}
 .pdf-foot-meta{font-size:9px;color:#999;letter-spacing:.5px}
@@ -220,7 +221,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
   .wrap>.topbar,.wrap>.hero,.wrap>.section,.wrap>.footer{display:none !important}
   .pdf-render-host{display:block !important}
   .pdf-page{margin:0 !important;padding:0 !important;width:100% !important;box-shadow:none !important}
-  .pdf-section,.pdf-anomaly,.pdf-plan-block{break-inside:avoid}
+  .pdf-anomaly,.pdf-plan-block{break-inside:avoid} /* V-012: pdf-section removed — page-tall sections forced page-per-section gaps */
   .pdf-table{break-inside:auto}
   .pdf-table tr{break-inside:avoid;break-after:auto}
 }
@@ -547,7 +548,7 @@ function pdfArtboard(){
       <div class="pdf-plan-impact">${t("Impacto esperado","Expected impact")}: <strong>${t(D.action_plan.expected_impact_es,D.action_plan.expected_impact_en)}</strong></div>${plan}</section>
     <footer class="pdf-foot"><div class="pdf-rule"></div>
       <p>${t("Este análisis es educativo, no asesoría legal. Para acción legal formal, consulta NACA (consumeradvocates.org) o un abogado de ley del consumidor.","This analysis is educational, not legal advice. For formal legal action, consult NACA (consumeradvocates.org) or a consumer-law attorney.")}</p>
-      <p class="pdf-foot-meta">Elite Credit AI · ${D.user.audit_date} · ${t("Página","Page")} 1 / 1</p></footer>
+      <p class="pdf-foot-meta">ELITE CREDIT AI · ${D.user.audit_date}</p></footer>
   </div>`;
 }
 
