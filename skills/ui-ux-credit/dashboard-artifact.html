@@ -574,6 +574,7 @@ function render(){
 // ============ ENTRANCE ANIMATIONS — rAF, same durations/easing as the React source ============
 // ScoreGaugeA: 1500ms count-up + arc fill + dot travel. FactorScoreDonut: 1300ms grow.
 function animateIn(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){GAUGE_P=1;DONUT_P=1;render();return;}
   const D=AUDIT_DATA, t0=performance.now();
   const GAUGE_MS=1500, DONUT_MS=1300;
   function frame(now){
@@ -589,7 +590,7 @@ function animateIn(){
   requestAnimationFrame(frame);
 }
 
-function setLang(l){LANG=l;render();animateIn();}   // language switch replays the entrance, like the design canvas
+function setLang(l){LANG=l;render();}   // no entrance replay on toggle — animation runs once on load
 function selectFactor(i){SEL_FACTOR=i;render();}     // interaction re-renders fully drawn (no replay)
 function selectAcct(i){SEL_ACCT=i;render();}
 function setFilter(f){FILTER=f;render();}
