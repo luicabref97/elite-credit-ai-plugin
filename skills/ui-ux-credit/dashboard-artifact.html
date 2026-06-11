@@ -407,7 +407,8 @@ const bureauStatusColor=s=>({"Pays as Agreed":"#5fa87a","Closed":"#7a8499","Char
 const easeOut=tt=>1-Math.pow(1-tt,3); // cubic ease-out — same curve as the React source
 
 // ============ STATE ============
-let LANG="es", SEL_FACTOR=null, SEL_ACCT=0, FILTER="all";
+// F-007: honor ?lang=en|es URL param like the original runtime.html
+let LANG=(new URLSearchParams(location.search).get("lang")==="en")?"en":"es", SEL_FACTOR=null, SEL_ACCT=0, FILTER="all";
 let GAUGE_P=1, DONUT_P=1; // animation progress 0..1 (1 = fully drawn)
 
 // ============ SCORE GAUGE (SVG) — animation per direction-a.jsx ScoreGaugeA ============
@@ -489,8 +490,8 @@ function accountsShelf(){
 // ============ ANOMALIES ============
 function anomalies(){
   const list=FILTER==="all"?AUDIT_DATA.anomalies:AUDIT_DATA.anomalies.filter(a=>a.severity===FILTER);
-  const counts={all:AUDIT_DATA.anomalies.length,HIGH:AUDIT_DATA.anomalies.filter(a=>a.severity==="HIGH").length,MEDIUM:AUDIT_DATA.anomalies.filter(a=>a.severity==="MEDIUM").length};
-  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" aria-pressed="${FILTER===k}" data-fid="chip-${k}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
+  const counts={all:AUDIT_DATA.anomalies.length,HIGH:AUDIT_DATA.anomalies.filter(a=>a.severity==="HIGH").length,MEDIUM:AUDIT_DATA.anomalies.filter(a=>a.severity==="MEDIUM").length,LOW:AUDIT_DATA.anomalies.filter(a=>a.severity==="LOW").length};
+  const chips=[["all",t("Todos","All"),counts.all],["HIGH",t("Críticos","Critical"),counts.HIGH],["MEDIUM",t("Medianos","Medium"),counts.MEDIUM],["LOW",t("Menores","Minor"),counts.LOW]].map(([k,l,n])=>`<button class="chip ${FILTER===k?'active':''}" aria-pressed="${FILTER===k}" data-fid="chip-${k}" onclick="setFilter('${k}')">${l}<span class="n">${n}</span></button>`).join("");
   const cards=list.map(a=>{const sc={HIGH:"#B03642",MEDIUM:"#C4A052",LOW:"#5fa87a"}[a.severity],sl={HIGH:t("Crítico","Critical"),MEDIUM:t("Mediano","Medium"),LOW:t("Menor","Minor")}[a.severity];
     return `<div class="anomaly" style="border-left-color:${sc}"><div class="an-head"><span class="an-sev" style="color:${sc};border-color:${sc}">${sl}</span><span class="an-cite">${a.citation}</span></div>
       <h3 class="an-title">${t(a.title_es,a.title_en)}</h3><p class="an-explain">${t(a.explanation_es,a.explanation_en)}</p>
@@ -508,10 +509,12 @@ function actionPlan(){
 
 // ============ CONTEXT SECTION — ported from direction-a.jsx "Your context" ============
 function contextSection(){
-  const labels=[[t("Cartas","Letters")],[t("Llamadas","Calls")],[t("Dificultad","Hardship")],[t("Documentos","Documents")]];
+  // V-002: label→data-key pairs; values keyed letters_received_es/en etc. per SKILL.md data contract
+  const labels=[["Cartas","Letters","letters_received"],["Llamadas","Calls","calls"],["Dificultad","Hardship","hardship"],["Documentos","Documents","docs"]];
   const pend=t("Pendiente","Pending");
   const cards=Object.entries(AUDIT_DATA.account_context).map(([creditor,ctx])=>{
-    const rows=labels.map(([lbl])=>`<div><span class="ctx-lbl">${lbl}</span><span class="ctx-val ${ctx?'':'pending'}">${ctx?(ctx[lbl]||"—"):pend}</span></div>`).join("");
+    const rows=labels.map(([es,en,key])=>{const v=ctx?ctx[key+"_"+(LANG==="en"?"en":"es")]:null;
+      return `<div><span class="ctx-lbl">${t(es,en)}</span><span class="ctx-val ${v?'':'pending'}">${ctx?(v||"—"):pend}</span></div>`;}).join("");
     return `<div class="ctx-card"><div class="ctx-creditor">${creditor}</div><div class="ctx-rows">${rows}</div></div>`;}).join("");
   return `<div class="context-grid">${cards}
     <button class="ctx-add" onclick="alert('${t("En el plugin, esto abre la entrevista en la conversación para personalizar tus cartas.","In the plugin, this opens the interview in the conversation to personalize your letters.")}')">+ ${t("Agregar más contexto","Add more context")}</button></div>`;
