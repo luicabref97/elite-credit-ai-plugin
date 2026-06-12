@@ -159,6 +159,8 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 @media(max-width:900px){
   .hero-grid,.scores-row,.factors,.shelf,.anomaly-grid,.timeline,.context-grid{grid-template-columns:1fr}
   .wrap{padding:20px}
+  .sd-head{flex-wrap:wrap} /* V-021: status pill (flex-shrink:0) overflowed 375px next to creditor name */
+  .sd-status{flex-shrink:1;text-align:left}
 }
 @media(pointer:coarse){ /* V-010: 44px touch targets where copy invites touch */
   .lang-toggle button{min-height:44px;padding:10px 16px}
