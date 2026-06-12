@@ -107,7 +107,7 @@ Reference variables (`var(--gold)`) — never hardcode the hex values in new wor
 4. **Anomalies** — filter chips (Todos/Críticos/Medianos/Menores, `aria-pressed`) + severity-bordered cards: title, plain explanation, affected chips, "Lo que vamos a hacer", citation.
 5. **Action plan** — 4 phase columns (this week / 2-3 / 4-8 / 8-18) with action/reason/effort.
 6. **Context** — per-creditor interview cards (Cartas/Llamadas/Dificultad/Documentos; "Pendiente" until answered) + "Agregar más contexto".
-7. **Footer** — "Reanudar mi journey" (toast placeholder until callMcpTool wiring) + ONE "Descargar PDF / Imprimir" + disclaimer.
+7. **Footer** — "Reanudar mi journey" (toast tells the consumer exactly what to type back in the conversation — plugin-emitted HTML has no MCP/chat bridge; see Future direction) + ONE "Descargar PDF / Imprimir" + disclaimer.
 8. **PDF artboard** (hidden, print-only) — white/monochrome/gold letter layout: brand header, score cards, factor table, accounts table (EQ/EX/TU), numbered issues with colored severity pills, action plan, disclaimer footer.
 
 ## Data contract — `AUDIT_DATA`
@@ -224,6 +224,9 @@ Iterate visually in `dashboard/index.html` (React canvas + tweaks panel; Babel r
 
 ## Future direction
 
-- **Live artifact Nivel 2:** `callMcpTool` against `elite-credit-api` so "Reanudar mi journey" hands back to the conversation and the dashboard refreshes data on open (requires the API to persist per-user audits — backend work).
+- **Live artifact Nivel 2 — researched 2026-06-12 (see ADR-021 addendum):** Live artifacts DO exist in Cowork and can call remote MCP connectors (`elite-credit-api` on Railway qualifies), BUT there is no API for a plugin/orchestrator to emit one — HTML written to outputs or emitted inline renders in a sandboxed preview with NO MCP/chat bridge. Two distinct upgrades when the platform allows:
+  - *Data actions* (what callMcpTool actually enables): refresh scores / re-query RAG on open — still requires the API to persist per-user audits (backend work).
+  - *Conversation actions* ("Reanudar journey", "Agregar contexto") are NOT MCP calls — no artifact mechanism delivers them; the type-this toast is the permanent pattern for those unless Anthropic ships a chat bridge.
+  - *Cheap experiment per prueba:* in Cowork, ask Claude directly to "crear un live artifact desde outputs/dashboard.html con el conector elite-credit-api" — user-initiated artifact creation may get the bridge even though plugin emission can't.
 - **Server-side PDF** (API repo) to attach the report to audit responses without the browser print step.
 - **Tailwind/shadcn migration** of the template without changing the data contract.

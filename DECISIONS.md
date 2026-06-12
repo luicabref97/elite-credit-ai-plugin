@@ -180,7 +180,13 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
   2. `callMcpTool`-driven live artifact fetching fresh data per open — DEFERRED to Nivel 2 (recorded in SKILL.md "Future direction"): requires the API to persist per-user audits (backend change). The embedded-data artifact solves today's pain without backend work.
   3. Document the full HTML structure in SKILL.md and have the model regenerate it each audit (pure competitive-intelligence style) — REJECTED: ~600 lines of hardened CSS/JS regenerated per audit invites drift and regressions; a version-controlled template with a data-swap keeps the /design-review hardening (21 fixes: a11y, AA contrast, 375px, reduced-motion, print correctness) intact.
 - **Trade-off accepted:** emitting the artifact inline costs ~25-30K tokens per audit. Accepted — it is the product moment (the consumer sees their dashboard instantly, zero file-hunting). In Claude Code the Write + preview panel substitute for emission.
-- **Status:** Accepted — pending k=1 re-test in Cowork (verify the artifact renders inline and the Step 8 gate passes with the new paths).
+- **Status:** Accepted — k=1 re-test PASSED (Prueba 3, 2026-06-12): artifact auto-opened in the Cowork preview, dedicated print-PDF worked. Buttons "Reanudar journey"/"Agregar contexto" dead as expected (no bridge) → addendum below.
+- **Addendum 2026-06-12 — live-artifact mechanism researched (D2 of Prueba 3):**
+  - CONFIRMED: "Live artifacts" are a real Cowork feature (support.claude.com art. 14729249, launched ~Apr 2026). They can call MCP connectors — including custom REMOTE servers (publicly reachable; `elite-credit-api` on Railway qualifies). Connectors are declared once at artifact creation, then run without per-call approval.
+  - CONFIRMED: HTML a plugin writes to outputs (or emits inline) renders in a **sandboxed webview with NO bridge** — there is no documented API for a plugin/agent to emit a true live artifact. `CoworkArtifacts.callMcpTool` exists internally but is beta/buggy (anthropic GH issue #55788). Deep links (`claude://`) undocumented.
+  - ARCHITECTURAL INSIGHT: even a live artifact would NOT make "Reanudar journey" work — that's a *conversation* action, and `callMcpTool` only calls MCP *data* tools. Live artifacts buy data-refresh (Nivel 2, still blocked on per-user audit persistence in the API); conversation handoff stays toast-pattern permanently unless Anthropic ships a chat bridge.
+  - ACTION TAKEN (v3.4.1): toast copy made actionable — it now tells the consumer the exact phrase to type back in the conversation (ES/EN), instead of describing what the button "would" do.
+  - EXPERIMENT QUEUED for next prueba: user-initiated artifact creation — ask Cowork in-chat to build a live artifact from `outputs/dashboard.html` declaring the `elite-credit-api` connector. May get the bridge even though plugin emission can't.
 
 ---
 

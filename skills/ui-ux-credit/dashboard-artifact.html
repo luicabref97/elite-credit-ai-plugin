@@ -618,8 +618,8 @@ function setLang(l){LANG=l;render();}   // no entrance replay on toggle — anim
 // V-015: named handlers (no translated strings injected into onclick attrs) + toast instead of alert()
 function uiNote(kind){
   const msg=kind==='resume'
-    ? t("En el plugin, esto continúa tu journey en la conversación.","In the plugin, this continues your journey in the conversation.")
-    : t("En el plugin, esto abre la entrevista en la conversación para personalizar tus cartas.","In the plugin, this opens the interview in the conversation to personalize your letters.");
+    ? t("Vuelve a la conversación de Cowork y escribe: \"continuar mi journey\" — ahí seguimos con tu siguiente paso.","Go back to the Cowork conversation and type: \"continue my journey\" — we'll pick up your next step there.")
+    : t("Vuelve a la conversación y escribe: \"quiero agregar contexto de mis cuentas\". Tus respuestas hacen las cartas más fuertes.","Go back to the conversation and type: \"I want to add context about my accounts\". Your answers make the letters stronger.");
   let el=document.getElementById("ui-toast");
   if(!el){el=document.createElement("div");el.id="ui-toast";el.setAttribute("role","status");
     el.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--navy-2);color:var(--gold-soft);border:1px solid rgba(196,160,82,.4);border-radius:10px;padding:12px 20px;font-size:13px;max-width:480px;text-align:center;z-index:99;box-shadow:0 8px 28px rgba(0,0,0,.45);transition:opacity .3s";
