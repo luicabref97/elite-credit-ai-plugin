@@ -234,7 +234,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 <div class="wrap" id="app"></div>
 
 <script>
-// ============ REAL CARLY AUDIT DATA (v3.3.1 engine, 1155 evals) ============
+// ===== AUDIT_DATA START — agents: replace EVERYTHING between START and END with the consumer's data (same shape; see skills/ui-ux-credit/SKILL.md data contract). Sample below = real Carly Tarazona audit. =====
 const AUDIT_DATA = {
   user:{ first_name:"Carly", last_name:"Tarazona", audit_date:"2026-03-18", ssn_last4:"2012" },
   routing:{ flow:"A", phase_name_es:"Reparación · Etapa 1 (Preparación)", phase_name_en:"Repair · Stage 1 (Prep)" },
@@ -400,7 +400,9 @@ const AUDIT_DATA = {
   },
 };
 
-// ============ HELPERS ============
+// ===== AUDIT_DATA END =====
+
+// ============ HELPERS (do not modify when populating data) ============
 const t=(es,en)=>LANG==="en"?en:es;
 const gradeColor=g=>({A:"#5FB97D",B:"#A8C957",C:"#E8C547",D:"#E08A3C",F:"#D24F66",EXCELLENT:"#5FB97D",VERY_GOOD:"#A8C957",GOOD:"#E8C547",FAIR:"#E08A3C",POOR:"#D24F66"}[g]||"#E8C547");
 const statusColor=g=>({good:{border:"#1f3a2a",text:"#5fa87a"},attention:{border:"#3d3520",text:"#C4A052"},collections:{border:"#3d1d22",text:"#d97082"}}[g]);

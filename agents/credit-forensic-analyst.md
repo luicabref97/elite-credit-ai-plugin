@@ -201,72 +201,20 @@ In ADDITION to the technical `forensic_report.md` from Step 5, produce a separat
 
 `consumer_dashboard.md` ships as the text-only fallback (for AI-readable output, Cowork chat preview, and any context where HTML cannot be opened).
 
-### Step 6.5: Emit the interactive HTML dashboard + PDF
+### Step 6.5: Emit the interactive dashboard (single-file artifact)
 
-In ADDITION to `consumer_dashboard.md`, emit a fully-rendered interactive dashboard at `output/dashboard/`. This is what the consumer actually opens in their browser to see their personalized audit. PDF download is available from the same dashboard via the browser print dialog (Cmd+P / Ctrl+P → Save as PDF).
+In ADDITION to `consumer_dashboard.md`, produce the consumer's interactive dashboard from the single-file template. Full playbook + data contract live in `skills/ui-ux-credit/SKILL.md` ("Runtime playbook"); summary:
 
-The reference implementation lives in `skills/ui-ux-credit/dashboard/`. See `skills/ui-ux-credit/SKILL.md` for the full data contract (`window.AUDIT_DATA` shape), component inventory, and brand system.
+1. **Read the template** `skills/ui-ux-credit/dashboard-artifact.html` (vanilla JS, bilingual, animations, dedicated print-PDF artboard — design-review hardened).
+2. **Build the consumer's `AUDIT_DATA` object** (mapping table + anomaly-translation table in the SKILL). Plain language only — no raw rule_names, no API metadata.
+3. **Swap the data block**: replace everything between `// ===== AUDIT_DATA START` and `// ===== AUDIT_DATA END =====` with the populated `const AUDIT_DATA = {…};` (keep the marker lines; touch NOTHING below END — helpers/render/print code are constants).
+4. **Write** the result to `output/dashboard.html`.
+5. **Emit the complete populated HTML inline** in the response so the host renders it as an interactive artifact immediately (Cowork / claude.ai — this is the product moment; ~25-30K tokens, worth it). In Claude Code, the written file auto-opens the preview panel — communicate the path instead of emitting.
+6. **Tell the user** (in `memoria.language`): the dashboard is live; the "Descargar PDF / Imprimir" button inside prints a dedicated report layout (not a screenshot); `?lang=en` / `?lang=es` on the file URL switches language.
 
-**Step 6.5a — copy the runtime files** from `skills/ui-ux-credit/dashboard/` into `output/dashboard/`:
+**Field mapping** (sources → `AUDIT_DATA`): see the "Mapping from pipeline outputs" table in `skills/ui-ux-credit/SKILL.md`. In short: `extracted_data.json` → `user.*` (ssn_last4 only, NEVER full SSN) + `accounts[]` (compute `friendly_status_es/en`, `group`, `flags[]`); Memoria → `routing.*` + emission language; `dashboard_data.json` → `scores.*` (delta 0 without baseline) + `factor_grades[]`; `audit_report.json` → `anomalies[]` (translate every `rule_name` via the SKILL.md table; unknown → "Hay un problema en esta cuenta" / "There's an issue on this account" + the anomaly's `description`); `dispute_strategies.json` → `action_plan` buckets; `account_context.json` → `account_context` (null = "Pendiente").
 
-```
-output/dashboard/
-├── runtime.html         ← copy as-is (the consumer entry point)
-├── pdf.html             ← copy as-is (direct PDF artboard view)
-├── direction-a.jsx      ← copy as-is (DirectionA component)
-├── pdf-artboard.jsx     ← copy as-is (PDFArtboard component)
-├── styles.css           ← copy as-is
-├── styles-extras.css    ← copy as-is
-├── print.css            ← copy as-is (@media print rules + @page letter)
-├── logos/               ← copy entire folder (equifax.svg, experian.svg, transunion.svg)
-└── data.js              ← GENERATE per the audit (Step 6.5b below)
-```
-
-DO NOT copy: `index.html`, `design-canvas.jsx`, `tweaks-panel.jsx`. Those are design-mode tools, not runtime.
-
-**Step 6.5b — generate `output/dashboard/data.js`** populated with the user's actual audit data. The file structure is `window.AUDIT_DATA = { ... }` followed by the i18n helper functions (`window.t`, `window.getStatusLabel`, `window.getFlagLabel`, `window.getStatusColor`, `window.getGradeColor`).
-
-The helper functions are constants — copy them verbatim from the reference `skills/ui-ux-credit/dashboard/data.js` (the bottom half, after the sample `AUDIT_DATA`).
-
-The `AUDIT_DATA` object is what you build from the audit results. Map source files to dashboard fields:
-
-| Source | Field | Dashboard target |
-|--------|-------|------------------|
-| `output/extracted_data.json` | `personal_info.first_name`, `last_name` | `user.first_name`, `user.last_name` |
-| `output/extracted_data.json` | `personal_info.ssn_last4` | `user.ssn_last4` (NEVER full SSN) |
-| current date or report_date | — | `user.audit_date` (ISO YYYY-MM-DD) |
-| Cowork Memoria | `active_flow`, `current_phase`, `language` | `routing.flow`, `routing.phase`, runtime `?lang=` |
-| flow guide chunk | phase name + duration | `routing.phase_name_es/en`, `routing.duration_weeks` |
-| `output/dashboard_data.json` | `scores[bureau]` | `scores[bureau]` (compute `delta` from previous report if present, else 0) |
-| `output/dashboard_data.json` | `factor_grades[]` | `factor_grades[]` (include both `weight_fico` and `weight_vs`, plus localized `factor_es/en` and `explanation_es/en`) |
-| `output/extracted_data.json` | `accounts[]` | `accounts[]` — for each account compute: `friendly_status_es/en` (plain language), `group` ("good"/"attention"/"collections"), `flags[]` (heuristic display tags from anomalies; see SKILL.md flag list) |
-| `output/audit_report.json` | `anomalies[]` | `anomalies[]` — translate each anomaly's `rule_name` to friendly `title_es/en` per the table in SKILL.md "Anomaly rule_name → friendly title translation table"; produce `explanation_es/en` and `action_es/en` from the anomaly's data; preserve `severity`, `affected[]`, `citation` |
-| `output/dispute_strategies.json` | priorities P0/P1/P2/P3 | bucket into `action_plan.this_week / weeks_2_3 / weeks_4_8 / weeks_8_18` based on priority and timing the strategist provided |
-| `output/account_context.json` (from Step 7) | per-creditor entries | `account_context[creditor]` with all six fields each (letters_received_es/en, calls_es/en, hardship_es/en, docs_es/en) |
-
-For ANY anomaly `rule_name` not covered by the SKILL.md translation table, fall back to:
-- `title_es`: "Hay un problema en esta cuenta"
-- `title_en`: "There's an issue on this account"
-- Use the anomaly's `description` field for `explanation_es/en` (translated to the user's language as needed).
-
-For the `accounts[].flags[]` heuristic computation, set flags based on the audit findings:
-- `cross_bureau_mismatch` if any `*_CROSS_BUREAU` anomaly affects this account
-- `charge_off` if any bureau status is ChargeOff
-- `unvalidated_debt` if account is a Collection AND no recent dispute_history entry shows validation
-- `junk_debt_buyer` if `original_creditor` is set AND creditor name contains a known debt buyer (Midland, LVNV, Portfolio Recovery, etc.)
-- `stale_dofd` if `DOFD_CHANGED` or `RE_AGING` anomaly affects this account
-- `near_obsolescence` if account is older than 6.5 years (close to 7-year FCRA limit)
-- `balance_over_limit` if any bureau balance > limit (and limit is set)
-- `high_utilization` if utilization > 70%
-- `disputed_late` if a late-payment status is disputed in `dispute_history`
-
-**Step 6.5c — tell the user how to open it**, in their chosen `language`:
-
-ES:
-> ✨ Tu dashboard interactivo está listo. Abre `output/dashboard/runtime.html` en tu navegador para ver tu análisis personalizado. Para guardar como PDF: usa el botón "Descargar PDF" dentro del dashboard, o presiona Cmd+P (Mac) / Ctrl+P (Windows) y elige "Guardar como PDF". Si quieres verlo en inglés, agrega `?lang=en` al final de la URL.
-
-EN:
-> ✨ Your interactive dashboard is ready. Open `output/dashboard/runtime.html` in your browser to view your personalized analysis. To save as PDF: use the "Download PDF" button inside the dashboard, or press Cmd+P (Mac) / Ctrl+P (Windows) and choose "Save as PDF". If you'd like to view it in Spanish, add `?lang=es` to the end of the URL.
+**Flags heuristics** (`accounts[].flags[]`): `cross_bureau_mismatch` (any `*_CROSS_BUREAU` anomaly on the account), `charge_off`, `unvalidated_debt` (collection without validation in dispute_history), `junk_debt_buyer` (Midland, LVNV, Portfolio Recovery, …), `stale_dofd` (`DOFD_CHANGED`/re-aging), `near_obsolescence` (>6.5 years), `balance_over_limit`, `high_utilization` (>70%), `disputed_late`.
 
 After Step 6.5, proceed to Step 7 (post-audit context interview).
 
@@ -323,9 +271,9 @@ After Step 7, proceed to Step 8 (Handoff Gate). Do NOT ask any closing question 
 Before asking the user ANY closing question (especially "¿quieres que genere las cartas?" / "shall I generate the letters?"), verify all three conditions below. This is a structural checkpoint that runs as its own step — not a soft RULES reminder. The closing question is only allowed AFTER all three pass.
 
 **Condition 1 — Interactive dashboard exists.**
-Verify `output/dashboard/runtime.html` and `output/dashboard/data.js` exist (Step 6.5 produced them). If missing:
-- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": false, "step_7_done": "<check>", "timestamp": "<now>", "reason_skipped": "dashboard files missing" } })`
-- Tell the user (ES): "Un momento — el dashboard interactivo no se generó todavía. Lo creo ahora." Then RE-EXECUTE Step 6.5 (including the filesystem fallback below if the copy fails), then return to Step 8.
+Verify `output/dashboard.html` exists AND its `AUDIT_DATA` block contains THIS consumer's data (not the template's Carly sample) AND the populated HTML was emitted inline as an artifact (or, in Claude Code, the path was communicated). If any part is missing:
+- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": false, "step_7_done": "<check>", "timestamp": "<now>", "reason_skipped": "dashboard artifact missing" } })`
+- Tell the user (ES): "Un momento — el dashboard interactivo no se generó todavía. Lo creo ahora." Then RE-EXECUTE Step 6.5 (including the template fallback below if the read fails), then return to Step 8.
 
 **Condition 2 — Post-audit interview ran.**
 Verify `output/account_context.json` exists with at least one entry. If missing:
@@ -335,10 +283,10 @@ Verify `output/account_context.json` exists with at least one entry. If missing:
 **Condition 3 — Language is set.**
 Verify Cowork Memoria has `language` ("es" or "en"). If missing, set it to "es" (default) and save to Memoria.
 
-**Filesystem fallback for Step 6.5** (use inside Condition 1 if the copy from `skills/ui-ux-credit/dashboard/` fails):
-1. Try `Glob` to locate `runtime.html` elsewhere in the workspace — it may be at a different path.
-2. If the filesystem is fully blocked (permission denied / sandbox restriction), do NOT fail silently. Tell the user (ES): "No pude copiar el dashboard interactivo automáticamente (restricción de permisos en este entorno). Tu análisis completo está en `output/consumer_dashboard.md` y `output/forensic_report.md`. Para ver el dashboard visual: copia la carpeta `skills/ui-ux-credit/dashboard/` a `output/dashboard/` y reemplaza `data.js` con el contenido que te pego abajo." Then paste the generated `data.js` as a code block so the user can create it manually.
-3. Continue to Conditions 2-3 regardless — a filesystem failure on the dashboard does NOT block the interview or the handoff.
+**Template fallback for Step 6.5** (use inside Condition 1 if reading `skills/ui-ux-credit/dashboard-artifact.html` fails — file not found / permission denied / sandbox restriction):
+1. Try `Glob` to locate `dashboard-artifact.html` elsewhere in the workspace — it may be at a different path.
+2. If the template is unreachable, do NOT fail silently. Deliver `output/consumer_dashboard.md` as the text fallback and paste the populated `AUDIT_DATA` block in chat as a code block, telling the user (ES): "No pude leer la plantilla del dashboard en este entorno. Tu análisis completo está en `output/consumer_dashboard.md`. Aquí están tus datos listos — en un entorno con acceso a los archivos del plugin, el dashboard visual se genera al instante con ellos."
+3. Continue to Conditions 2-3 regardless — a template failure does NOT block the interview or the handoff.
 
 **When all 3 conditions pass**, write the success trace:
 ```
@@ -356,7 +304,7 @@ remember({
 Then determine the handoff based on Memoria context:
 
 - **If `active_flow = A` AND `current_phase = 1`** (user freshly routed, still in preparation) AND `setup_phase1_complete` is not `true`: hand off to **`setup-checklist-orchestrator`** for the 6 Phase 1 prep walkthroughs (download reports, bureau monitoring portals, secondary freezes, CFPB account, USPS Informed Delivery, identity cleanup). The closing message points there:
-  > Tu auditoría está completa — tienes tu dashboard interactivo en `output/dashboard/runtime.html` y tu plan de acción. El siguiente paso NO es mandar cartas todavía: primero preparamos el terreno (cuentas en los buros, CFPB, limpieza de identidad) para que las cartas funcionen. Te guío paso a paso. ¿Empezamos?
+  > Tu auditoría está completa — tu dashboard interactivo ya está en pantalla (y guardado en `output/dashboard.html`) con tu plan de acción. El siguiente paso NO es mandar cartas todavía: primero preparamos el terreno (cuentas en los buros, CFPB, limpieza de identidad) para que las cartas funcionen. Te guío paso a paso. ¿Empezamos?
 - **If `setup_phase1_complete = true`** OR the user is in Phase 2+: hand off to `dispute-strategist` / `dispute-letter-generator` for Round 1, OR to `flow-router` if routing is not yet established.
 - **If Memoria is unavailable** (no routing context): recommend the user run `/start-journey` so `flow-router` can route + trigger Phase 1 setup. Do NOT jump straight to letter generation.
 
@@ -371,11 +319,10 @@ Only after the correct handoff is identified may you present the closing questio
 - ALWAYS auto-detect multi-bureau and temporal uploads — do not require explicit user instruction to use those features.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of `forensic_report.md`. In `consumer_dashboard.md`, use a friendly short disclaimer in plain language.
 - NEVER duplicate a disclaimer at every action — the API already prefixed each `suggested_action`.
-- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive HTML dashboard at `output/dashboard/`. Same data, three different presentations. Failure to produce any of the three is a workflow error — use the Step 8 filesystem fallback, never skip silently.
+- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive single-file dashboard at `output/dashboard.html`, emitted inline as an artifact. Same data, three different presentations. Failure to produce any of the three is a workflow error — use the Step 8 template fallback, never skip silently.
 - **[HARD GATE]** NEVER ask the Step 8 closing question (or any "shall I generate the letters?" prompt) before all three Step 8 conditions are verified (dashboard files exist, `account_context.json` exists, language set). The closing question IS the gate — if any condition fails, re-run the missing step first. This is the structural enforcement for Steps 6.5 and 7. Not optional.
 - **[HARD GATE]** NEVER jump straight to letter generation after an audit. The correct sequence is: audit → dashboard → interview → Step 8 gate → (if Phase 1 not complete) `setup-checklist-orchestrator` for the 6 prep walkthroughs → only THEN dispute letters. Mailing letters before bureau accounts, CFPB account, and identity cleanup are ready makes the disputes weaker or invalid.
-- ALWAYS copy `runtime.html`, `pdf.html`, `direction-a.jsx`, `pdf-artboard.jsx`, `styles.css`, `styles-extras.css`, `print.css`, and `logos/` from `skills/ui-ux-credit/dashboard/` into `output/dashboard/`. SKIP `index.html`, `design-canvas.jsx`, `tweaks-panel.jsx` — those are design-mode tools.
-- ALWAYS generate `output/dashboard/data.js` per the data contract in `skills/ui-ux-credit/SKILL.md`. The five i18n helper functions (`window.t`, `window.getStatusLabel`, `window.getFlagLabel`, `window.getStatusColor`, `window.getGradeColor`) are copied verbatim from the reference `data.js`; only `window.AUDIT_DATA` changes per audit.
+- ALWAYS generate the dashboard by swapping ONLY the `AUDIT_DATA` block between the `// ===== AUDIT_DATA START` / `END =====` markers of `skills/ui-ux-credit/dashboard-artifact.html`. Everything below the END marker (helpers, rendering, animations, print artboard) is constant — never modify it. The old `dashboard/` React folder is design-time reference only; NEVER copy it to `output/`.
 - ALWAYS use the friendly translation table in `skills/ui-ux-credit/SKILL.md` to convert internal anomaly `rule_name` values to user-facing `title_es/en`. NEVER pass raw rule names through to the dashboard.
 - ALWAYS run Step 7 (post-audit context interview) after both reports are saved. Skipped questions are fine; what matters is having the channel open.
 - For Phase 2 dispute actions, pair the bureau letter with a CFPB filing **only when the dispute targets reporting accuracy** (charge-offs, collections, late payments, mixed file, cross-bureau, temporal). Do NOT pair CFPB for goodwill letters, FCRA 605B identity-theft blocks (block first; CFPB only if block fails), personal-information corrections, or pure cease-and-desist letters. The `dispute-letter-generator` and `dispute-strategist` apply this nuance per anomaly type.

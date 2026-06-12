@@ -171,6 +171,19 @@ The original 4 ADRs (001–004) are preserved verbatim because they remain valid
 
 ---
 
+### ADR-021: v3.4.0 — single-file dashboard artifact replaces the multi-file React folder as the consumer deliverable
+- **Date:** 2026-06-11
+- **Decision:** The consumer dashboard ships as ONE self-contained HTML file. A canonical template lives at `skills/ui-ux-credit/dashboard-artifact.html` (vanilla JS — no React/Babel/build step; bilingual ES/EN with `?lang=` support; rAF entrance animations; dedicated light/gold print-PDF artboard revealed via `@media print`; machine-findable `// ===== AUDIT_DATA START/END =====` markers around the data block). At the end of each audit the ORCHESTRATOR (inline — not a file-copying subagent) reads the template, swaps ONLY the AUDIT_DATA block with the consumer's data, writes `output/dashboard.html`, and EMITS the populated HTML inline so the host (Cowork / claude.ai) renders it as an interactive artifact immediately. `ui-ux-credit/SKILL.md` was rewritten around this runtime playbook + data contract; `credit-forensic-analyst` Steps 6.5/8, `full-pipeline` Step 6.5, and `PROJECT_INSTRUCTIONS_TEMPLATE.md` updated to match. The old `dashboard/` React folder is demoted to design-time reference (NEVER shipped); design changes are iterated there, then ported to the template and re-verified with `/design-review`.
+- **Root cause this solves (Carly tests, Prueba 1/2):** the folder deliverable required opening `runtime.html` from disk with sibling JSX/CSS files and React+Babel CDN — unusable for consumers ("solo se abre desde VS Code"), broken for subagents (no plugin-file access), and its buttons (PDF, context) were dead ends. The official Cowork plugin pattern (e.g. `sales/competitive-intelligence`) is a self-contained HTML artifact emitted by the orchestrator; subagents cannot emit artifacts (no API), so emission is pinned to the orchestrator level.
+- **Alternatives considered:**
+  1. Keep the folder, add a local web server or build step — REJECTED: infrastructure for a consumer who can't use a file manager; still no inline render.
+  2. `callMcpTool`-driven live artifact fetching fresh data per open — DEFERRED to Nivel 2 (recorded in SKILL.md "Future direction"): requires the API to persist per-user audits (backend change). The embedded-data artifact solves today's pain without backend work.
+  3. Document the full HTML structure in SKILL.md and have the model regenerate it each audit (pure competitive-intelligence style) — REJECTED: ~600 lines of hardened CSS/JS regenerated per audit invites drift and regressions; a version-controlled template with a data-swap keeps the /design-review hardening (21 fixes: a11y, AA contrast, 375px, reduced-motion, print correctness) intact.
+- **Trade-off accepted:** emitting the artifact inline costs ~25-30K tokens per audit. Accepted — it is the product moment (the consumer sees their dashboard instantly, zero file-hunting). In Claude Code the Write + preview panel substitute for emission.
+- **Status:** Accepted — pending k=1 re-test in Cowork (verify the artifact renders inline and the Step 8 gate passes with the new paths).
+
+---
+
 ## Future ADRs to record (when relevant)
 
 The following decisions will be recorded as ADRs when the corresponding work begins:

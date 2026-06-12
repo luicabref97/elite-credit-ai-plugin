@@ -104,9 +104,9 @@ Compile all outputs into `output/forensic_report.md` with:
 
 Produce `output/consumer_dashboard.md` — same data as the forensic report, written at 8th-grade reading level in the user's language, no rule names / chunk counts / API versions. See `credit-forensic-analyst` Step 6 for the required sections and copy rules.
 
-**Step 6.5 — Interactive HTML dashboard (the consumer's main deliverable)**
+**Step 6.5 — Interactive dashboard (single-file artifact — the consumer's main deliverable)**
 
-Emit `output/dashboard/` by copying the runtime files from `skills/ui-ux-credit/dashboard/` and generating `output/dashboard/data.js` from the audit JSONs (full data contract in `skills/ui-ux-credit/SKILL.md`; full procedure in `credit-forensic-analyst` Step 6.5). If the filesystem copy fails, use the fallback in `credit-forensic-analyst` Step 8 (paste `data.js` inline). This is the deliverable the consumer actually opens — never skip it silently.
+Read the template `skills/ui-ux-credit/dashboard-artifact.html`, swap ONLY the `AUDIT_DATA` block (between the `// ===== AUDIT_DATA START` / `END =====` markers) with the consumer's data, write to `output/dashboard.html`, and **emit the populated HTML inline so the host renders it as an interactive artifact immediately** (data contract + full playbook in `skills/ui-ux-credit/SKILL.md`; enforcement in `credit-forensic-analyst` Steps 6.5/8). If the template read fails, use the Step 8 template fallback (deliver `consumer_dashboard.md` + paste the `AUDIT_DATA` block). Never skip silently.
 
 **Step 7 — Post-audit context interview**
 
@@ -147,7 +147,7 @@ Before any closing question, verify the three Step 8 conditions (dashboard files
 - ALWAYS relay the API's `legal_disclaimer` once at the end of the report.
 - NEVER add a duplicate disclaimer to each anomaly — the API already prefixed `suggested_action`.
 - **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("97 rules", "82 of 97"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.0.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md`, the HTML dashboard, or chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
-- ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the interactive `dashboard/` (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
+- ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the interactive `dashboard.html` artifact (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
 
 ## Output File Layout
 
@@ -163,10 +163,8 @@ output/
 ├── forensic_report.md               ← technical report (pro-facing, Step 5)
 ├── consumer_dashboard.md            ← plain-language summary (Step 6)
 ├── account_context.json             ← per-account interview answers (Step 7)
-└── dashboard/                       ← interactive HTML dashboard (Step 6.5)
-    ├── runtime.html                 ← the consumer entry point (opens in browser)
-    ├── data.js                      ← generated per-audit data
-    └── (runtime assets copied from skills/ui-ux-credit/dashboard/)
+└── dashboard.html                   ← interactive single-file dashboard (Step 6.5),
+                                        also emitted inline as an artifact
 ```
 
 ## Latino-specific overlay
