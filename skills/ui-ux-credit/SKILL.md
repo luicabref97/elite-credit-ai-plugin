@@ -50,6 +50,13 @@ This replaces the old copy-the-folder flow. It is executed by the ORCHESTRATOR i
 5. **Emit it as an inline artifact**: include the complete populated HTML document in your response so the host (Cowork / claude.ai) renders it as an interactive artifact immediately — this is the moment the consumer actually sees their dashboard, with no file-hunting. This is token-heavy (~25-30K) and worth it; it is the product moment. In Claude Code CLI the written file + preview panel suffice; mention the path instead.
 6. **Tell the user** (in their `language`): the dashboard is live; the "Descargar PDF / Imprimir" button inside prints a dedicated report layout (not a screenshot of the page); add `?lang=en` / `?lang=es` to the file URL to switch language (the in-page ES/EN toggle also works).
 
+### Presentation golden rules (v3.5 — apply when building `anomalies[]` and `accounts[]`)
+
+1. **Consolidate by TYPE.** One anomaly card per finding TYPE with every affected account listed in `affected[]` — never one card per instance. Twelve missing-DOFD hits are ONE card with twelve creditors, not twelve cards.
+2. **Re-aging absorbs missing-DOFD.** NEVER show a missing-DOFD finding and a re-aging finding as separate cards for the SAME account — "no delinquency date" next to "the delinquency date is wrong" reads as a contradiction. The re-aging card absorbs the angle. The API assembler already applies this server-side (`apply_presentation_coherence`); mirror it whenever assembling cards from raw `audit_report.json`. Same for accounts whose first-delinquency date lives in a remark (`first_delinquency_in_remarks`): "sin fecha de mora" would read as false — drop them from the missing-DOFD card (letters keep the finding).
+3. **Original vs collector = ONE linked story.** When the same debt appears as the original creditor's charge-off AND a collector/debt-buyer entry, present them LINKED: the finding is the DOUBLE REPORTING, and the fix is the original showing $0/closed with its sold/transferred indicator. NEVER accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate" of itself. Use the linkage display fields (`linked_collector` / `linked_origin`) when present.
+4. **Consumer names in dashboards, RAW names in letters.** The dashboard shows understandable creditor names (e.g., "Comenity Bank / Victoria's Secret"); dispute letters ALWAYS use the raw furnisher name exactly as printed on the report (e.g., "CB/VICSCRT") — and only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred` ones.
+
 **Verification (matches `credit-forensic-analyst` Step 8 gate):** `output/dashboard.html` exists, AUDIT_DATA contains the consumer's real data (not the Carly sample), and the artifact was emitted (or path communicated in Claude Code).
 
 **Fallback** if the template file cannot be read (sandbox restriction): do NOT fail silently. Deliver `consumer_dashboard.md` as the text fallback, paste the populated `AUDIT_DATA` block in chat, and tell the user the visual dashboard needs an environment with plugin-file access.
@@ -163,11 +170,11 @@ The template reads one `const AUDIT_DATA = {…}` between the START/END markers.
 
 ### Anomaly rule_name → friendly title translation table
 
-Internal identifiers MUST be translated before they reach the dashboard. The 20 most common:
+Internal identifiers MUST be translated before they reach the dashboard. The 30 most common (ES titles match the API assembler's `_RULE_ES` copy exactly — keep them in sync):
 
 | `rule_name` | `title_es` | `title_en` |
 |-------------|------------|------------|
-| `BALANCE_EXCEEDS_CREDIT_LIMIT` | Tu límite de crédito fue rebasado en el reporte | Your reported balance is higher than your credit limit |
+| `BALANCE_EXCEEDS_CREDIT_LIMIT` | Saldo por encima del límite de crédito | Balance reported above your credit limit |
 | `DOFD_DISCREPANCY_CROSS_BUREAU` | Tu fecha de mora aparece diferente en cada buró | Your delinquency date differs across bureaus |
 | `BALANCE_DISCREPANCY_CROSS_BUREAU` | Tu balance se reporta diferente entre los burós | Your balance is reported differently across bureaus |
 | `STATUS_CONFLICT_CROSS_BUREAU` | Una cuenta aparece con estados distintos en cada buró | One account shows different statuses across bureaus |
@@ -187,6 +194,16 @@ Internal identifiers MUST be translated before they reach the dashboard. The 20 
 | `INQUIRY_OVER_24_MONTHS` | Consulta más vieja de 24 meses | Inquiry older than 24 months |
 | `INQUIRY_NO_PURPOSE` | Consulta sin propósito autorizado | Inquiry without authorized purpose |
 | `COLLECTION_NO_ORIGINAL_CREDITOR` | Cobranza sin acreedor original identificado | Collection without identified original creditor |
+| `NEGATIVE_ACCOUNT_MISSING_DOFD` | Cuenta negativa sin fecha de mora | Negative account missing its delinquency date |
+| `RE_AGING_SIGNATURE` | Posible re-envejecimiento de la deuda | Possible re-aging of the debt |
+| `DUPLICATE_DEBT_ORIGINAL_PLUS_COLLECTOR` | La misma deuda aparece dos veces | The same debt appears twice |
+| `PAYMENT_HISTORY_CODE_CONTRADICTS_PUBLIC_RECORDS` | Código de bancarrota sin bancarrota en tu archivo | Bankruptcy code with no bankruptcy on file |
+| `CLOSED_ACCOUNT_WITH_MONTHLY_PAYMENT` | Pago mensual exigido en cuenta cerrada | Monthly payment demanded on a closed account |
+| `DEBT_BUYER_DOCUMENTATION_GAP` | Comprador de deuda sin datos de validación | Debt buyer missing validation data |
+| `COLLECTION_TRADELINE_MISCLASSIFIED` | Colección clasificada como préstamo | Collection classified as a loan |
+| `PAST_DUE_DISCREPANCY_CROSS_BUREAU` | Monto vencido distinto entre burós | Past-due amount differs across bureaus |
+| `HIGH_CREDIT_DISCREPANCY_CROSS_BUREAU` | Saldo máximo distinto entre burós | Highest balance differs across bureaus |
+| `NO_OPEN_POSITIVE_TRADELINES` | No tienes ninguna cuenta abierta y positiva | No open account in good standing on your file |
 
 Fallback for unknown rule_names: `title_es` "Hay un problema en esta cuenta" / `title_en` "There's an issue on this account", using the anomaly's `description` as the explanation (translated as needed).
 

@@ -2,7 +2,7 @@
 name: dispute-letter-generator
 description: >
   Generates personalized FCRA / FDCPA / Reg F / state-law dispute letters for each anomaly
-  detected in the v3 audit (97-rule output). Selects from 17 vault templates by negative
+  detected in the v3 audit (106-rule output). Selects from 17 vault templates by negative
   type and dispute approach. Creates bureau disputes, direct-to-furnisher letters, debt
   validation requests, identity-theft block requests, method-of-verification challenges,
   and method-specific templates (clerk-of-court, bankruptcy-trustee, summons response, etc.).
@@ -133,6 +133,16 @@ To fetch a template, query the RAG with `category: LETTER_TEMPLATE` and the temp
 | Auditor returns "verified" after a Round 1 — nothing changed | `round2-followup-dispute-bureaus` + Method-of-Verification challenge | METHOD_OF_VERIFICATION |
 | Collector sued the consumer | `summons-corte` | LEGAL_DEFENSE + counter-claim if applicable |
 | Setup phase before disputing | `congelamiento-bureaus-secundarios` + `dispute-lexisnexis` | Block secondary-bureau pollution before primary disputes |
+| `DEBT_BUYER_DOCUMENTATION_GAP` (v3.2) | `validate-debt-1` then `validate-debt-2` (or `validacion-deuda-colector` in Spanish) — demand the Reg F itemized amount, chain of title, and verifiable purge date | DEBT_VALIDATION (validation-first — BEFORE any bureau round or payment) |
+| `DUPLICATE_DEBT_ORIGINAL_PLUS_COLLECTOR` (v3.2) | `round1-initial-dispute-bureaus` + a DIRECT letter to the ORIGINAL furnisher demanding $0 balance + transferred/sold indicator (only the current owner may report the debt as active) | BUREAU_DISPUTE + DIRECT_TO_FURNISHER |
+| v3.2 accuracy pack: `BALANCE_EXCEEDS_CREDIT_LIMIT` (demand itemized breakdown, never argue "impossible"), `CLOSED_ACCOUNT_WITH_MONTHLY_PAYMENT`, `PAYMENT_HISTORY_CODE_CONTRADICTS_PUBLIC_RECORDS`, `NEGATIVE_ACCOUNT_MISSING_DOFD`, `RE_AGING_SIGNATURE` (demand the verifiable DOFD; FCRA 616 willful angle), `COLLECTION_TRADELINE_MISCLASSIFIED` | `round1-initial-dispute-bureaus` | BUREAU_DISPUTE |
+| `NO_OPEN_POSITIVE_TRADELINES` (v3.2) | — NO letter. This is an INFO finding: credit building (secured card / credit-builder loan guidance), not a dispute | N/A |
+
+## FURNISHER NAME & ORIGINAL-CREDITOR PROVENANCE (NON-NEGOTIABLE)
+
+**Letters ALWAYS use the RAW furnisher name exactly as it appears printed on the credit report** (e.g., "CB/VICSCRT", not "Comenity Bank / Victoria's Secret") — the bureau's ACDV matching keys on the printed string. Consumer-friendly names belong in the dashboard, never in the letter.
+
+**Letters ONLY cite `original_creditor` values that were printed on the report** (`original_creditor_source = None`, i.e. *reported*). Values the engine resolved itself — `"self"` (the entry IS the original creditor's own tradeline) or `"inferred"` (copied from the debt buyer's tradeline) — are presentation/strategy aids ("identificado por el análisis") and must NEVER be asserted in a letter as if the report printed them. Citing an inferred original creditor as printed fact hands the furnisher an easy "inaccurate dispute" rebuttal.
 
 ## CFPB-FROM-ROUND-1 POLICY (operational)
 
@@ -235,9 +245,9 @@ Create `output/dispute_tracking.md` with a tracking table that has BOTH `certifi
 
 This is non-negotiable for user-facing chat output (the cover letters and the chat summary that goes WITH each letter — the formal letter content itself does cite statutes for legal effect):
 
-- **NEVER** mention rule counts ("97 rules"), chunk counts ("756 chunks"), evaluation totals, engine versions, MCP namespaces, JSON-RPC details, HTTP status codes.
+- **NEVER** mention rule counts ("106 rules"), chunk counts ("756 chunks"), evaluation totals, engine versions, MCP namespaces, JSON-RPC details, HTTP status codes.
 - **NEVER** use internal anomaly rule identifiers (e.g., `DOFD_DISCREPANCY_CROSS_BUREAU`) in user-facing chat. Translate to plain language. The formal letters can and should cite specific statute sections (FCRA §605(a)(4), FDCPA §1692g, etc.) because that is the letter's legal weapon — but the chat summary explaining the letter to the user uses plain language.
-- **NEVER** confirm letter generation with API status ("API online — 756 chunks · 97 rules · v3.0.0"). The user wants their letters and the cover-page summary, not the API metadata.
+- **NEVER** confirm letter generation with API status ("API online — 756 chunks · 106 rules · v3.2.0"). The user wants their letters and the cover-page summary, not the API metadata.
 - The user receives the formal letter, a plain-language summary of what it argues, and clear mailing instructions. Technical depth stays in the letter body where it serves a legal purpose.
 
 ---

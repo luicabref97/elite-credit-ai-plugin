@@ -47,7 +47,7 @@ flow-router orchestrates a strategic decision that depends on (a) the `elite-cre
 
 Try calling `health_check` from the `elite-credit-api` MCP server. If the call:
 
-- **Succeeds** with `{"status":"ok", "total_rules":97, ...}` — proceed to Step 1.
+- **Succeeds** with `{"status":"ok", "total_rules":106, ...}` — proceed to Step 1.
 - **Fails** (tool unavailable, no `elite-credit-api` namespace, error) — STOP. Output the message below and do NOT route. Without the audit + RAG + Memoria, the routing decision would be uninformed and would not persist for `phase-tracker` to pick up later.
 
 #### NO_MCP_AVAILABLE message
@@ -62,7 +62,7 @@ Try calling `health_check` from the `elite-credit-api` MCP server. If the call:
 > 2. Si no esta instalado: `/plugin marketplace add luicabref97/elite-credit-ai-plugin` y luego `/plugin install elite-credit-ai@elite-credit-ai-marketplace`.
 > 3. Si el conector esta desconectado: Conectores → `elite-credit-api` → Instalar.
 >
-> Si quieres guidance general sobre por donde empezar credit repair sin la rutacion programatica, dime y respondo desde conocimiento general FCRA/FDCPA — pero pierdes la persistencia entre sesiones, el audit de 97 reglas, y el seguimiento por `phase-tracker`.
+> Si quieres guidance general sobre por donde empezar credit repair sin la rutacion programatica, dime y respondo desde conocimiento general FCRA/FDCPA — pero pierdes la persistencia entre sesiones, el audit de 106 reglas, y el seguimiento por `phase-tracker`.
 
 STOP. Do NOT continue routing in this case.
 
@@ -213,8 +213,8 @@ EN:
 
 **Forbidden** (do NOT generate any of these patterns):
 
-- "API online — 756 chunks · 97 rules · v3.0.0"
-- "The 97-rule engine ran 789 evaluations and flagged 13 items"
+- "API online — 756 chunks · 106 rules · v3.2.0"
+- "The 106-rule engine ran 789 evaluations and flagged 13 items"
 - "MCP server health_check returned ok"
 - "Calling tools/call with arguments"
 - Any literal JSON envelope or HTTP status code
@@ -387,9 +387,9 @@ After handoff, set up `phase-tracker` to monitor progress (it activates on next 
 - NEVER duplicate the disclaimer prefix that the API already adds to `suggested_action`. Relay the top-level `legal_disclaimer` once at the end.
 - If the user pushes back on the routing ("but I want to optimize NOW even though I have negatives"), respect the autonomy but explain the trade-off the flow guide warns about. Document the override in Memoria.
 - **NEVER show internal mechanics to the user.** This is copy hygiene and is non-negotiable:
-  - Rule counts ("97 rules", "789 evaluations") — for your orchestration, never for the user.
+  - Rule counts ("106 rules", "789 evaluations") — for your orchestration, never for the user.
   - Chunk counts ("756 chunks", "13 categories") — internal context only.
-  - Engine / API versions ("v3.0.0", "engine_version", `total_registered_rules`) — never user-facing.
+  - Engine / API versions ("v3.2.0", "engine_version", `total_registered_rules`) — never user-facing.
   - MCP namespaces ("elite-credit-api", "tools/call", "health_check") — never user-facing.
   - Internal anomaly identifiers ("DOFD_DISCREPANCY_CROSS_BUREAU", `rule_name`) — translate to plain language before showing.
   - JSON-RPC details, HTTP status codes, response schemas — never user-facing.

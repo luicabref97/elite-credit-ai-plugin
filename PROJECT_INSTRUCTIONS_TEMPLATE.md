@@ -87,7 +87,7 @@ After adding the Memory, future raw-chat questions about credit will be redirect
 
 ## What this template does NOT do
 
-- **It does not list the 97 audit rules or the 13 RAG categories.** Those live inside the agent files and the vault. Project Instructions are not the right place to duplicate them; the agents will surface what's relevant per query.
+- **It does not list the 106 audit rules or the 13 RAG categories.** Those live inside the agent files and the vault. Project Instructions are not the right place to duplicate them; the agents will surface what's relevant per query.
 - **It does not specify dispute sequencing or letter templates.** Same reason — `dispute-strategist` and `dispute-letter-generator` own that logic and apply it with awareness of the specific anomaly type, evidence, state law, and prior dispute history.
 - **It does not impose a blanket "always file CFPB" or "always file state AG" policy.** Those are context-dependent decisions the agents make per anomaly.
 - **It does not name your project.** You name the project whatever you want when you create it. The plugin and MCP server identifiers (`luicabref97/elite-credit-ai-plugin` and `elite-credit-api`) are stable; the project name is yours.

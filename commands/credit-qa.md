@@ -12,7 +12,7 @@ Load all available analysis data:
 2. `output/extracted_data.json` — full account details (primary bureau)
 3. `output/other_bureau_reports.json` — other bureaus (when multi-bureau was uploaded)
 4. `output/previous_report_data.json` — previous-period report (when temporal was uploaded)
-5. `output/audit_report.json` — anomaly findings (97-rule v3 output)
+5. `output/audit_report.json` — anomaly findings (106-rule v3 output)
 6. `output/dispute_strategies.json` — recommended actions
 7. `output/dispute_history.json` — consumer's prior dispute / cease-and-desist actions
 

@@ -1,6 +1,6 @@
 ---
 description: >
-  Generate prioritized dispute strategies for the 97-rule v3 audit findings. Uses the
+  Generate prioritized dispute strategies for the 106-rule v3 audit findings. Uses the
   756-chunk legal RAG with FCRA / FDCPA / Reg F / Reg V / Reg X / state-law citations
   and 2024-2026 case law. Activates when user says "dispute strategy", "how to dispute",
   "what should I dispute first", "create dispute plan", "prioritize my disputes",
@@ -79,7 +79,7 @@ See `cfpb-timing-policy.md` for the full Day 0 → Day 30 workflow.
 | **STATE_AG_COMPLAINT** | After Round 3 with state law applicable (CA Rosenthal, TX TDCA, FL CCPA, NY GBL Article 25) | State consumer-protection law | TRUE escalation, after CFPB record is established |
 | **LEGAL_ACTION** | Willful noncompliance, documented damages | FCRA 616 / 617 (statutory damages); FDCPA §1692k | TRUE escalation — the CFPB record is the abogado's primary evidence |
 
-## Anomaly-to-Strategy Map (from 97-rule audit)
+## Anomaly-to-Strategy Map (from 106-rule audit)
 
 ### High-evidence rules → P0/P1
 | Rule | Approach | Statutory anchor |
@@ -116,6 +116,23 @@ See `cfpb-timing-policy.md` for the full Day 0 → Day 30 workflow.
 | `PAYMENT_GRID_CONTRADICTS_STATUS` | BUREAU_DISPUTE | FCRA §1681e(b) |
 | `PAID_STATUS_WITH_PAST_DUE` | DIRECT_TO_FURNISHER | FCRA §1681s-2 |
 | Late payment present (no anomaly) | GOODWILL | Creditor discretion |
+
+### New in v3.2 (engine 97 → 106 rules)
+| Rule | Priority | Approach | Statutory anchor |
+|------|----------|----------|------------------|
+| `DEBT_BUYER_DOCUMENTATION_GAP` | **P0** | DEBT_VALIDATION first (Reg F letter demanding itemized amount as of the itemization date, chain of title, verifiable purge date) — validation-first, BEFORE any bureau round or payment | FDCPA §1692g(a) + Reg F 12 CFR 1006.34(c) |
+| `RE_AGING_SIGNATURE` | **P1** | BUREAU_DISPUTE + DIRECT_TO_FURNISHER — demand the verifiable DOFD backed by the original creditor's records; documented willful re-aging is FCRA 616 (willful noncompliance) statutory-damages eligible | FCRA 623(a)(5) + 605(c) + FCRA 616 |
+| `DUPLICATE_DEBT_ORIGINAL_PLUS_COLLECTOR` | **P1** | BUREAU_DISPUTE (double reporting) + DIRECT_TO_FURNISHER to the ORIGINAL creditor — once the debt is sold, the original entry must show $0 with a transferred/sold indicator; only the current owner may report it active | FCRA §1681e(b) + FDCPA §1692e(2) |
+| `PAST_DUE_DISCREPANCY_CROSS_BUREAU` | **P1** | BUREAU_DISPUTE (all bureaus simultaneously — you cannot owe two different amounts at once) | FCRA §1681e(b) |
+| `HIGH_CREDIT_DISCREPANCY_CROSS_BUREAU` | **P1** | BUREAU_DISPUTE (all bureaus simultaneously) | FCRA §1681e(b) |
+| `BALANCE_EXCEEDS_CREDIT_LIMIT` | **P1** | BUREAU_DISPUTE + DIRECT_TO_FURNISHER — demand itemized breakdown (principal vs interest/fees) + credit-limit verification. Review-flag framing: NEVER argue "impossible/illegal" (balances legitimately exceed limits post charge-off) | FCRA §1681e(b) + Metro2 CRRG |
+| `CLOSED_ACCOUNT_WITH_MONTHLY_PAYMENT` | **P1** | BUREAU_DISPUTE — Metro2 requires $0 scheduled payment on charged-off accounts; an active obligation on a dead account misstates the debt load | Metro2 CRRG + FCRA 623(a)(1)(A) |
+| `PAYMENT_HISTORY_CODE_CONTRADICTS_PUBLIC_RECORDS` | **P1** | BUREAU_DISPUTE — purge the "B" grid codes or document the bankruptcy they reference (no verified public record exists) | FCRA §1681e(b) + Metro2 CRRG |
+| `NEGATIVE_ACCOUNT_MISSING_DOFD` | **P2** | BUREAU_DISPUTE + DIRECT_TO_FURNISHER — demand the verifiable DOFD or removal (the 7-year clock cannot be verified without it) | FCRA §623(a)(5) + 605(c) |
+| `COLLECTION_TRADELINE_MISCLASSIFIED` | **P2** | BUREAU_DISPUTE — demand correction to the proper collection Account Type code (0C/48); the wrong type distorts credit mix | Metro2 CRRG + FCRA §1681e(b) |
+| `NO_OPEN_POSITIVE_TRADELINES` | **P4** | NO dispute — this is credit building, not a violation: establish 1-2 positive active tradelines (secured card / credit-builder loan) alongside the disputes | N/A (INFO finding) |
+
+> **⚠️ Provenance rule for `original_creditor` (legal — non-negotiable):** the audit payload may carry `original_creditor_source` per collection. Dispute letters may ONLY cite an original creditor that was **reported** (`source = None` — printed in the report itself). Values with source `"self"` (the entry IS the original creditor's own) or `"inferred"` (resolved by the engine's Phase 1.7 matching) are for presentation and strategy ("identificado por el análisis") — NEVER cite them in a letter as if they were printed on the report.
 
 ## Fraud Pattern Detection
 

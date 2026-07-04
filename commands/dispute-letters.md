@@ -2,7 +2,7 @@
 description: Generate personalized FCRA/FDCPA dispute letters from the 17-template catalog using audit findings
 ---
 
-Generate personalized dispute letters for all anomalies detected in the v3 forensic audit (97-rule output) by selecting from the **17 vault letter templates**.
+Generate personalized dispute letters for all anomalies detected in the v3 forensic audit (106-rule output) by selecting from the **17 vault letter templates**.
 
 ## Prerequisites
 

@@ -3,7 +3,7 @@ description: >
   End-to-end forensic credit report analysis pipeline. Activates when user says
   "analyze my credit report", "run full analysis", "forensic audit", "credit report pipeline",
   or uploads a credit report PDF. Orchestrates extraction, visualization, auditing
-  (97 FCRA/FDCPA/Reg F/Metro2 rules with cross-bureau and temporal support), dispute
+  (106 FCRA/FDCPA/Reg F/Metro2 rules with cross-bureau and temporal support), dispute
   strategy generation with 756-chunk legal RAG, and dispute-letter generation. Multi-bureau
   and previous-report uploads are detected automatically.
 ---
@@ -41,7 +41,7 @@ Orchestrate the complete forensic analysis of a US tri-bureau credit report PDF,
 
 ### Phase 2: Forensic Analysis (~1-2 minutes)
 
-**Step 3 — Audit (97 Rules)**
+**Step 3 — Audit (106 rules)**
 
 If the Elite Credit API is connected (MCP server `elite-credit-api`), call `POST /api/audit/run` with the assembled payload:
 
@@ -55,18 +55,20 @@ If the Elite Credit API is connected (MCP server `elite-credit-api`), call `POST
 ```
 
 This executes:
-- 82 single-account rules
-- 6 collection-specific rules
+- 89 single-account rules
+- 7 collection-specific rules
 - 8 temporal rules (only when `previous_report_data` is provided)
+- 1 file-level rule (once per report — Phase 2.7)
 - 1 soft-inquiry temporal rule
-- 5 cross-bureau inline rules (only when `other_bureau_reports` is provided)
-- = up to 97 rules + 5 cross-bureau rules
+- 7 cross-bureau inline rules (only when `other_bureau_reports` is provided)
+- = up to 106 registered rules + 7 cross-bureau rules
+- Phase 1.7 runs BEFORE the rules: collections missing `original_creditor` are resolved from the file itself with provenance (`original_creditor_source`: `None` = printed on the report, `"self"` = the original creditor's own entry, `"inferred"` = copied from the debt buyer's tradeline)
 
 Rate limit: 60 requests / minute. The pipeline rarely hits this — one audit call per session.
 
 **Save** the response to `output/audit_report.json`. The response has these v3 fields:
 - `total_anomalies`, `anomalies_by_severity`, `anomalies_by_category`, `anomalies[]`
-- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (always 97), `engine_version` ("3.0.0")
+- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (always 106), `engine_version` ("3.2.0")
 - `legal_disclaimer` (Spanish-language educational notice)
 - Each `anomaly.suggested_action` is already prefixed with the disclaimer
 
@@ -108,6 +110,12 @@ Produce `output/consumer_dashboard.md` — same data as the forensic report, wri
 
 Read the template `skills/ui-ux-credit/dashboard-artifact.html`, swap ONLY the `AUDIT_DATA` block (between the `// ===== AUDIT_DATA START` / `END =====` markers) with the consumer's data, write to `output/dashboard.html`, and **emit the populated HTML inline so the host renders it as an interactive artifact immediately** (data contract + full playbook in `skills/ui-ux-credit/SKILL.md`; enforcement in `credit-forensic-analyst` Steps 6.5/8). If the template read fails, use the Step 8 template fallback (deliver `consumer_dashboard.md` + paste the `AUDIT_DATA` block). Never skip silently.
 
+**Presentation golden rules (v3.5 — apply to Steps 5, 6 and 6.5):**
+1. **Consolidate findings by TYPE**, listing the affected accounts on each — never one card/entry per instance.
+2. **NEVER present missing-DOFD and re-aging as separate findings on the SAME account** — the re-aging card absorbs the angle (the API assembler already does this for the dashboard; mirror it when assembling manually). Accounts whose first-delinquency date appears in a remark also leave the missing-DOFD card.
+3. **Original vs collector are LINKED, not duplicated**: present the original creditor's tradeline as needing to show $0/closed and frame the finding as the DOUBLE REPORTING. Never accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate".
+4. **Consumer-understandable creditor names in dashboards; RAW furnisher names (exactly as printed on the report) in dispute letters** — and letters only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred`.
+
 **Step 7 — Post-audit context interview**
 
 Run the per-account interview (see `credit-forensic-analyst` Step 7) and save `output/account_context.json`. Skipped answers are fine; what matters is opening the channel.
@@ -146,7 +154,7 @@ Before any closing question, verify the three Step 8 conditions (dashboard files
 - ALWAYS check whether the user uploaded multiple reports — multi-bureau and temporal capabilities only fire when their data is provided.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of the report.
 - NEVER add a duplicate disclaimer to each anomaly — the API already prefixed `suggested_action`.
-- **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("97 rules", "82 of 97"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.0.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md`, the HTML dashboard, or chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
+- **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("106 rules", "89 of 106"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.2.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md`, the HTML dashboard, or chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
 - ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the interactive `dashboard.html` artifact (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
 
 ## Output File Layout
@@ -158,7 +166,7 @@ output/
 ├── previous_report_data.json        ← only when a previous report uploaded
 ├── dispute_history.json             ← only when prior dispute evidence given
 ├── dashboard_data.json              ← score grades, factor grades, tips
-├── audit_report.json                ← from /api/audit/run (97-rule output)
+├── audit_report.json                ← from /api/audit/run (106-rule output)
 ├── dispute_strategies.json          ← from dispute-strategist skill
 ├── forensic_report.md               ← technical report (pro-facing, Step 5)
 ├── consumer_dashboard.md            ← plain-language summary (Step 6)
