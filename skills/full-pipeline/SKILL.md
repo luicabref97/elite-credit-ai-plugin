@@ -68,7 +68,7 @@ Rate limit: 60 requests / minute. The pipeline rarely hits this — one audit ca
 
 **Save** the response to `output/audit_report.json`. The response has these v3 fields:
 - `total_anomalies`, `anomalies_by_severity`, `anomalies_by_category`, `anomalies[]`
-- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (always 106), `engine_version` ("3.2.0")
+- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (always 106), `engine_version` ("3.3.0")
 - `legal_disclaimer` (Spanish-language educational notice)
 - Each `anomaly.suggested_action` is already prefixed with the disclaimer
 

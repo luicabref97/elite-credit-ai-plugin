@@ -56,7 +56,7 @@ Each optional field is independent. Send any combination.
   "total_evaluations": 106,
   "unique_rules_fired": 14,
   "total_registered_rules": 106,
-  "engine_version": "3.2.0",
+  "engine_version": "3.3.0",
   "legal_disclaimer": "Este API devuelve analisis automatizado ... NO constituye asesoria legal. ..."
 }
 ```

@@ -125,7 +125,7 @@ Rate limit: 60/min — one call per session.
 The response includes (v3.2 contract):
 
 - `total_anomalies`, `anomalies_by_severity`, `anomalies_by_category`, `anomalies[]`
-- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (106), `engine_version` ("3.2.0")
+- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (106), `engine_version` ("3.3.0")
 - Collections may carry `original_creditor_source` (`None` = printed on the report, `"self"` = the original creditor's own entry, `"inferred"` = resolved by the engine's Phase 1.7 matching) — see the presentation golden rules in Step 6.5 and NEVER cite `self`/`inferred` values in letters as if printed on the report
 - `legal_disclaimer` (Spanish disclaimer to relay once at end)
 - Each `anomaly.suggested_action` is **already prefixed** with: "Esto es educativo, no asesoria legal. Consulta un abogado FCRA/FDCPA antes de actuar. " — DO NOT add another disclaimer on top.

@@ -50,7 +50,7 @@ If no API is connected:
 Save results to `output/audit_report.json`. The v3 response includes:
 
 - `total_anomalies`, `anomalies_by_severity`, `anomalies_by_category`, `anomalies[]`
-- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (106), `engine_version` ("3.2.0")
+- `total_evaluations`, `unique_rules_fired`, `total_registered_rules` (106), `engine_version` ("3.3.0")
 - `legal_disclaimer` (Spanish-language educational notice)
 - Each anomaly's `suggested_action` is **prefixed** with the disclaimer — do NOT add another
 
