@@ -106,15 +106,22 @@ Compile all outputs into `output/forensic_report.md` with:
 
 Produce `output/consumer_dashboard.md` — same data as the forensic report, written at 8th-grade reading level in the user's language, no rule names / chunk counts / API versions. See `credit-forensic-analyst` Step 6 for the required sections and copy rules.
 
-**Step 6.5 — Interactive dashboard (single-file artifact — the consumer's main deliverable)**
+**Step 6.5 — Deliver the analysis in chat (the consumer's main deliverable)**
 
-Read the template `skills/ui-ux-credit/dashboard-artifact.html`, swap ONLY the `AUDIT_DATA` block (between the `// ===== AUDIT_DATA START` / `END =====` markers) with the consumer's data, write to `output/dashboard.html`, and **emit the populated HTML inline so the host renders it as an interactive artifact immediately** (data contract + full playbook in `skills/ui-ux-credit/SKILL.md`; enforcement in `credit-forensic-analyst` Steps 6.5/8). If the template read fails, use the Step 8 template fallback (deliver `consumer_dashboard.md` + paste the `AUDIT_DATA` block). Never skip silently.
+The plugin does NOT emit an HTML dashboard or inline artifact (retired in v3.6.0, ADR-022 — the visual dashboard is exclusive to the elitecredit.ai webapp). Instead, present the analysis as a **structured chat response** in the user's language, with these four blocks in order (full format spec + concrete example in `skills/ui-ux-credit/SKILL.md`, "Chat response format"):
+
+1. **Resumen ejecutivo** (2-3 lines) — scores with friendly grades, total findings, the single most urgent issue.
+2. **Hallazgos consolidados POR TIPO** — ordered by severity (Crítico → Medio → Menor), each with friendly title (translation table in `skills/ui-ux-credit/SKILL.md`), affected accounts with FRIENDLY NAMES, one line of concrete evidence, and a one-line action.
+3. **Plan de acción priorizado** — timeline buckets (this week / weeks 2-3 / 4-8 / 8-18) from the P0-P4 strategies; never show internal priority codes.
+4. **Cierre** — realistic score-impact range, Phase 1 setup reminder (letters come AFTER setup), dispute-letter offer, short disclaimer.
+
+Enforcement lives in `credit-forensic-analyst` Steps 6.5/8. Never skip silently.
 
 **Presentation golden rules (v3.5 — apply to Steps 5, 6 and 6.5):**
 1. **Consolidate findings by TYPE**, listing the affected accounts on each — never one card/entry per instance.
-2. **NEVER present missing-DOFD and re-aging as separate findings on the SAME account** — the re-aging card absorbs the angle (the API assembler already does this for the dashboard; mirror it when assembling manually). Accounts whose first-delinquency date appears in a remark also leave the missing-DOFD card.
+2. **NEVER present missing-DOFD and re-aging as separate findings on the SAME account** — the re-aging entry absorbs the angle (the API assembler already does this server-side; mirror it when assembling manually). Accounts whose first-delinquency date appears in a remark also leave the missing-DOFD entry.
 3. **Original vs collector are LINKED, not duplicated**: present the original creditor's tradeline as needing to show $0/closed and frame the finding as the DOUBLE REPORTING. Never accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate".
-4. **Consumer-understandable creditor names in dashboards; RAW furnisher names (exactly as printed on the report) in dispute letters** — and letters only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred`.
+4. **Consumer-understandable creditor names in the chat presentation; RAW furnisher names (exactly as printed on the report) in dispute letters** — and letters only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred`.
    Compose friendly names via the cascade in `skills/ui-ux-credit/SKILL.md`: extractor `consumer_label` (brand-only; null when uncertain — never invent) → `GET /api/config/furnisher_brands` seed (abbreviations → brands → issuers) → honest generic "{Tipo} — {crudo}", with the type phrase per language from `loan_type`/`account_type`.
 
 **Step 7 — Post-audit context interview**
@@ -123,7 +130,7 @@ Run the per-account interview (see `credit-forensic-analyst` Step 7) and save `o
 
 **Step 8 — Handoff Gate (do NOT close before this passes)**
 
-Before any closing question, verify the three Step 8 conditions (dashboard files exist, `account_context.json` exists, language set) per `credit-forensic-analyst` Step 8. Then hand off: Flow A Phase 1 → `setup-checklist-orchestrator` (6 prep walkthroughs); Phase 2+ → `dispute-strategist` / `dispute-letter-generator`. NEVER jump straight to letter generation.
+Before any closing question, verify the three Step 8 conditions (analysis delivered in chat + `consumer_dashboard.md` exists, `account_context.json` exists, language set) per `credit-forensic-analyst` Step 8. Then hand off: Flow A Phase 1 → `setup-checklist-orchestrator` (6 prep walkthroughs); Phase 2+ → `dispute-strategist` / `dispute-letter-generator`. NEVER jump straight to letter generation.
 
 ## Executive Summary Template
 
@@ -155,8 +162,9 @@ Before any closing question, verify the three Step 8 conditions (dashboard files
 - ALWAYS check whether the user uploaded multiple reports — multi-bureau and temporal capabilities only fire when their data is provided.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of the report.
 - NEVER add a duplicate disclaimer to each anomaly — the API already prefixed `suggested_action`.
-- **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("106 rules", "89 of 106"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.2.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md`, the HTML dashboard, or chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
-- ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the interactive `dashboard.html` artifact (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
+- **COPY HYGIENE — NEVER show internal mechanics to the user.** No rule counts ("106 rules", "89 of 106"), chunk counts ("756 chunks"), evaluation totals, engine versions ("v3.2.0"), MCP namespaces, or raw anomaly rule_names in `consumer_dashboard.md` or in chat. Those numbers are for your orchestration only. Translate everything to plain language. (The technical `forensic_report.md` may reference statutes and findings, but still must not flaunt API metadata.)
+- ALWAYS produce all of: `forensic_report.md` (Step 5), `consumer_dashboard.md` (Step 6), the structured chat delivery (Step 6.5), and `account_context.json` (Step 7). Verify them at the Step 8 gate before any closing question. Never end at Step 5.
+- NEVER emit an HTML dashboard, inline artifact, or single-file visualization — that path was retired in v3.6.0 (ADR-022). The visual dashboard is exclusive to the elitecredit.ai webapp; redirect there when the user asks for it.
 
 ## Output File Layout
 
@@ -170,11 +178,12 @@ output/
 ├── audit_report.json                ← from /api/audit/run (106-rule output)
 ├── dispute_strategies.json          ← from dispute-strategist skill
 ├── forensic_report.md               ← technical report (pro-facing, Step 5)
-├── consumer_dashboard.md            ← plain-language summary (Step 6)
-├── account_context.json             ← per-account interview answers (Step 7)
-└── dashboard.html                   ← interactive single-file dashboard (Step 6.5),
-                                        also emitted inline as an artifact
+├── consumer_dashboard.md            ← plain-language summary (Step 6; durable copy
+│                                       of the Step 6.5 chat delivery)
+└── account_context.json             ← per-account interview answers (Step 7)
 ```
+
+The consumer's main deliverable (Step 6.5) is the structured chat response itself — it is not a file.
 
 ## Latino-specific overlay
 

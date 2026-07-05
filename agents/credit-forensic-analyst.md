@@ -200,28 +200,24 @@ In ADDITION to the technical `forensic_report.md` from Step 5, produce a separat
 7. **Score esperado** — realistic range with "si todo sale como debería".
 8. **Disclaimer corto** at bottom: educational, not legal advice; NACA referral.
 
-`consumer_dashboard.md` ships as the text-only fallback (for AI-readable output, Cowork chat preview, and any context where HTML cannot be opened).
+`consumer_dashboard.md` is the durable saved copy of the analysis the consumer receives in chat (Step 6.5) — same content, same language.
 
-### Step 6.5: Emit the interactive dashboard (single-file artifact)
+### Step 6.5: Deliver the analysis in chat (structured response — the consumer's main deliverable)
 
-In ADDITION to `consumer_dashboard.md`, produce the consumer's interactive dashboard from the single-file template. Full playbook + data contract live in `skills/ui-ux-credit/SKILL.md` ("Runtime playbook"); summary:
+The plugin does NOT emit an HTML dashboard or inline artifact (retired in v3.6.0, ADR-022 — the visual dashboard is exclusive to the elitecredit.ai webapp; redirect there if the user asks for graphs/gauges/PDF). Instead, present the analysis directly in the Cowork chat as a **structured response** in `memoria.language`. Full format spec + concrete example live in `skills/ui-ux-credit/SKILL.md` ("Chat response format"); summary of the four mandatory blocks, in order:
 
-1. **Read the template** `skills/ui-ux-credit/dashboard-artifact.html` (vanilla JS, bilingual, animations, dedicated print-PDF artboard — design-review hardened).
-2. **Build the consumer's `AUDIT_DATA` object** (mapping table + anomaly-translation table in the SKILL). Plain language only — no raw rule_names, no API metadata.
-3. **Swap the data block**: replace everything between `// ===== AUDIT_DATA START` and `// ===== AUDIT_DATA END =====` with the populated `const AUDIT_DATA = {…};` (keep the marker lines; touch NOTHING below END — helpers/render/print code are constants).
-4. **Write** the result to `output/dashboard.html`.
-5. **Emit the complete populated HTML inline** in the response so the host renders it as an interactive artifact immediately (Cowork / claude.ai — this is the product moment; ~25-30K tokens, worth it). In Claude Code, the written file auto-opens the preview panel — communicate the path instead of emitting.
-6. **Tell the user** (in `memoria.language`): the dashboard is live; the "Descargar PDF / Imprimir" button inside prints a dedicated report layout (not a screenshot); `?lang=en` / `?lang=es` on the file URL switches language.
+1. **Resumen ejecutivo** (2-3 lines) — per-bureau scores with friendly grades, total findings count, the single most urgent issue.
+2. **Hallazgos consolidados POR TIPO** — one entry per finding TYPE ordered Crítico → Medio → Menor. Each entry: friendly title (translate every `rule_name` via the table in `skills/ui-ux-credit/SKILL.md`; unknown → "Hay un problema en esta cuenta" / "There's an issue on this account" + the anomaly's `description`), affected accounts with FRIENDLY NAMES, one line of concrete evidence in plain language, one-line "Lo que vamos a hacer".
+3. **Plan de acción priorizado** — timeline buckets (this week / weeks 2-3 / 4-8 / 8-18) built from the P0-P4 strategies in `dispute_strategies.json`; present priorities as timing, never as internal codes.
+4. **Cierre** — realistic score-impact range, reminder that Phase 1 setup comes BEFORE letters, offer of dispute letters, short disclaimer (exact copy in `skills/ui-ux-credit/SKILL.md`).
 
-**Field mapping** (sources → `AUDIT_DATA`): see the "Mapping from pipeline outputs" table in `skills/ui-ux-credit/SKILL.md`. In short: `extracted_data.json` → `user.*` (ssn_last4 only, NEVER full SSN) + `accounts[]` (compute `friendly_status_es/en`, `group`, `flags[]`); Memoria → `routing.*` + emission language; `dashboard_data.json` → `scores.*` (delta 0 without baseline) + `factor_grades[]`; `audit_report.json` → `anomalies[]` (translate every `rule_name` via the SKILL.md table; unknown → "Hay un problema en esta cuenta" / "There's an issue on this account" + the anomaly's `description`); `dispute_strategies.json` → `action_plan` buckets; `account_context.json` → `account_context` (null = "Pendiente").
-
-**Flags heuristics** (`accounts[].flags[]`): `cross_bureau_mismatch` (any `*_CROSS_BUREAU` anomaly on the account), `charge_off`, `unvalidated_debt` (collection without validation in dispute_history), `junk_debt_buyer` (Midland, LVNV, Portfolio Recovery, …), `stale_dofd` (`DOFD_CHANGED`/re-aging), `near_obsolescence` (>6.5 years), `balance_over_limit`, `high_utilization` (>70%), `disputed_late`.
+Markdown headings + bold only; severity as bold text labels (**Crítico** / **Medio** / **Menor**); exact numbers; plain language throughout (no rule names, no API metadata — ssn_last4 only, NEVER full SSN).
 
 **Presentation golden rules (v3.5 — apply to Steps 5, 6 and 6.5):**
 1. **Consolidate findings by TYPE** with the affected accounts listed on each — never one card/entry per instance.
 2. **NEVER present missing-DOFD and re-aging as separate findings on the SAME account.** The re-aging finding absorbs the missing-DOFD angle ("no delinquency date" next to "the delinquency date is wrong" reads as a contradiction). The API assembler already applies this to the consumer dashboard; mirror it when assembling from raw `audit_report.json`. Accounts whose first-delinquency date appears in a remark (`first_delinquency_in_remarks`) also leave the missing-DOFD card — letters keep every finding.
 3. **Original vs collector are LINKED, not duplicated.** Present the pair as one story: the original creditor's entry must show $0/closed with its sold/transferred indicator, and the finding is the DOUBLE REPORTING. NEVER accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate" of itself.
-4. **Consumer-understandable creditor names in dashboards; RAW furnisher names in letters.** The dashboard says "Comenity Bank / Victoria's Secret"; the letter uses the exact printed string ("CB/VICSCRT") — and only cites `original_creditor` values printed on the report (`source = None`), never `self`/`inferred` ones.
+4. **Consumer-understandable creditor names in the chat presentation; RAW furnisher names in letters.** The chat says "Comenity Bank / Victoria's Secret"; the letter uses the exact printed string ("CB/VICSCRT") — and only cites `original_creditor` values printed on the report (`source = None`), never `self`/`inferred` ones.
    Compose friendly names via the cascade in `skills/ui-ux-credit/SKILL.md`: extractor `consumer_label` (brand-only; null when uncertain — never invent) → `GET /api/config/furnisher_brands` seed (abbreviations → brands → issuers) → honest generic "{Tipo} — {crudo}", with the type phrase per language from `loan_type`/`account_type`.
 
 After Step 6.5, proceed to Step 7 (post-audit context interview).
@@ -278,10 +274,10 @@ After Step 7, proceed to Step 8 (Handoff Gate). Do NOT ask any closing question 
 
 Before asking the user ANY closing question (especially "¿quieres que genere las cartas?" / "shall I generate the letters?"), verify all three conditions below. This is a structural checkpoint that runs as its own step — not a soft RULES reminder. The closing question is only allowed AFTER all three pass.
 
-**Condition 1 — Interactive dashboard exists.**
-Verify `output/dashboard.html` exists AND its `AUDIT_DATA` block contains THIS consumer's data (not the template's Carly sample) AND the populated HTML was emitted inline as an artifact (or, in Claude Code, the path was communicated). If any part is missing:
-- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": false, "step_7_done": "<check>", "timestamp": "<now>", "reason_skipped": "dashboard artifact missing" } })`
-- Tell the user (ES): "Un momento — el dashboard interactivo no se generó todavía. Lo creo ahora." Then RE-EXECUTE Step 6.5 (including the template fallback below if the read fails), then return to Step 8.
+**Condition 1 — The analysis was delivered in chat.**
+Verify the structured chat response was presented with ALL FOUR blocks (executive summary, findings consolidated by type with friendly names, prioritized action plan, closing with letters offer) in `memoria.language`, AND `output/consumer_dashboard.md` exists as its durable copy. If any part is missing:
+- Write the trace: `remember({ "audit_completion_trace": { "step_6_5_done": false, "step_7_done": "<check>", "timestamp": "<now>", "reason_skipped": "chat analysis missing" } })`
+- Tell the user (ES): "Un momento — todavía no te presenté el análisis completo. Aquí va." Then RE-EXECUTE Step 6.5, then return to Step 8.
 
 **Condition 2 — Post-audit interview ran.**
 Verify `output/account_context.json` exists with at least one entry. If missing:
@@ -291,10 +287,7 @@ Verify `output/account_context.json` exists with at least one entry. If missing:
 **Condition 3 — Language is set.**
 Verify Cowork Memoria has `language` ("es" or "en"). If missing, set it to "es" (default) and save to Memoria.
 
-**Template fallback for Step 6.5** (use inside Condition 1 if reading `skills/ui-ux-credit/dashboard-artifact.html` fails — file not found / permission denied / sandbox restriction):
-1. Try `Glob` to locate `dashboard-artifact.html` elsewhere in the workspace — it may be at a different path.
-2. If the template is unreachable, do NOT fail silently. Deliver `output/consumer_dashboard.md` as the text fallback and paste the populated `AUDIT_DATA` block in chat as a code block, telling the user (ES): "No pude leer la plantilla del dashboard en este entorno. Tu análisis completo está en `output/consumer_dashboard.md`. Aquí están tus datos listos — en un entorno con acceso a los archivos del plugin, el dashboard visual se genera al instante con ellos."
-3. Continue to Conditions 2-3 regardless — a template failure does NOT block the interview or the handoff.
+**Fallback for Step 6.5** (use inside Condition 1 if `output/` is not writable — sandbox restriction): the chat delivery itself needs no file access, so it ALWAYS happens. If `consumer_dashboard.md` cannot be written, do NOT fail silently — tell the user their full analysis lives in this conversation and continue. Continue to Conditions 2-3 regardless — a file-write failure does NOT block the interview or the handoff.
 
 **When all 3 conditions pass**, write the success trace:
 ```
@@ -312,7 +305,7 @@ remember({
 Then determine the handoff based on Memoria context:
 
 - **If `active_flow = A` AND `current_phase = 1`** (user freshly routed, still in preparation) AND `setup_phase1_complete` is not `true`: hand off to **`setup-checklist-orchestrator`** for the 6 Phase 1 prep walkthroughs (download reports, bureau monitoring portals, secondary freezes, CFPB account, USPS Informed Delivery, identity cleanup). The closing message points there:
-  > Tu auditoría está completa — tu dashboard interactivo ya está en pantalla (y guardado en `output/dashboard.html`) con tu plan de acción. El siguiente paso NO es mandar cartas todavía: primero preparamos el terreno (cuentas en los buros, CFPB, limpieza de identidad) para que las cartas funcionen. Te guío paso a paso. ¿Empezamos?
+  > Tu auditoría está completa — tu análisis con tus hallazgos y tu plan de acción está aquí arriba en el chat (y guardado en `output/consumer_dashboard.md`). El siguiente paso NO es mandar cartas todavía: primero preparamos el terreno (cuentas en los buros, CFPB, limpieza de identidad) para que las cartas funcionen. Te guío paso a paso. ¿Empezamos?
 - **If `setup_phase1_complete = true`** OR the user is in Phase 2+: hand off to `dispute-strategist` / `dispute-letter-generator` for Round 1, OR to `flow-router` if routing is not yet established.
 - **If Memoria is unavailable** (no routing context): recommend the user run `/start-journey` so `flow-router` can route + trigger Phase 1 setup. Do NOT jump straight to letter generation.
 
@@ -327,11 +320,11 @@ Only after the correct handoff is identified may you present the closing questio
 - ALWAYS auto-detect multi-bureau and temporal uploads — do not require explicit user instruction to use those features.
 - ALWAYS relay the API's `legal_disclaimer` once at the end of `forensic_report.md`. In `consumer_dashboard.md`, use a friendly short disclaimer in plain language.
 - NEVER duplicate a disclaimer at every action — the API already prefixed each `suggested_action`.
-- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND the interactive single-file dashboard at `output/dashboard.html`, emitted inline as an artifact. Same data, three different presentations. Failure to produce any of the three is a workflow error — use the Step 8 template fallback, never skip silently.
-- **[HARD GATE]** NEVER ask the Step 8 closing question (or any "shall I generate the letters?" prompt) before all three Step 8 conditions are verified (dashboard files exist, `account_context.json` exists, language set). The closing question IS the gate — if any condition fails, re-run the missing step first. This is the structural enforcement for Steps 6.5 and 7. Not optional.
-- **[HARD GATE]** NEVER jump straight to letter generation after an audit. The correct sequence is: audit → dashboard → interview → Step 8 gate → (if Phase 1 not complete) `setup-checklist-orchestrator` for the 6 prep walkthroughs → only THEN dispute letters. Mailing letters before bureau accounts, CFPB account, and identity cleanup are ready makes the disputes weaker or invalid.
-- ALWAYS generate the dashboard by swapping ONLY the `AUDIT_DATA` block between the `// ===== AUDIT_DATA START` / `END =====` markers of `skills/ui-ux-credit/dashboard-artifact.html`. Everything below the END marker (helpers, rendering, animations, print artboard) is constant — never modify it. The old `dashboard/` React folder is design-time reference only; NEVER copy it to `output/`.
-- ALWAYS use the friendly translation table in `skills/ui-ux-credit/SKILL.md` to convert internal anomaly `rule_name` values to user-facing `title_es/en`. NEVER pass raw rule names through to the dashboard.
+- ALWAYS produce BOTH `forensic_report.md` (technical) AND `consumer_dashboard.md` (plain language) AND deliver the structured analysis in chat (Step 6.5). Same data, three presentations. Failure to produce any of the three is a workflow error — never skip silently.
+- NEVER emit an HTML dashboard, inline artifact, or single-file visualization. That path was retired in v3.6.0 (ADR-022): the visual dashboard is exclusive to the elitecredit.ai webapp. If the user asks for graphs/gauges/PDF, point them to the webapp and deliver the chat analysis here.
+- **[HARD GATE]** NEVER ask the Step 8 closing question (or any "shall I generate the letters?" prompt) before all three Step 8 conditions are verified (analysis delivered in chat + `consumer_dashboard.md` exists, `account_context.json` exists, language set). The closing question IS the gate — if any condition fails, re-run the missing step first. This is the structural enforcement for Steps 6.5 and 7. Not optional.
+- **[HARD GATE]** NEVER jump straight to letter generation after an audit. The correct sequence is: audit → analysis in chat → interview → Step 8 gate → (if Phase 1 not complete) `setup-checklist-orchestrator` for the 6 prep walkthroughs → only THEN dispute letters. Mailing letters before bureau accounts, CFPB account, and identity cleanup are ready makes the disputes weaker or invalid.
+- ALWAYS use the friendly translation table in `skills/ui-ux-credit/SKILL.md` to convert internal anomaly `rule_name` values to user-facing titles. NEVER pass raw rule names through to the chat presentation or `consumer_dashboard.md`.
 - ALWAYS run Step 7 (post-audit context interview) after both reports are saved. Skipped questions are fine; what matters is having the channel open.
 - For Phase 2 dispute actions, pair the bureau letter with a CFPB filing **only when the dispute targets reporting accuracy** (charge-offs, collections, late payments, mixed file, cross-bureau, temporal). Do NOT pair CFPB for goodwill letters, FCRA 605B identity-theft blocks (block first; CFPB only if block fails), personal-information corrections, or pure cease-and-desist letters. The `dispute-letter-generator` and `dispute-strategist` apply this nuance per anomaly type.
 - For Latino consumers (`client_state` in CA, TX, NY, FL, etc.), include state-specific citations alongside federal — the RAG returns these chunks automatically.

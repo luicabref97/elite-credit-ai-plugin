@@ -1,7 +1,7 @@
 {
   "name": "elite-credit-ai",
-  "version": "3.5.1",
-  "description": "Credit-journey suite for US consumers (Latino focus). Covers the full arc: forensic repair when there are FCRA/FDCPA/Reg F anomalies, score optimization, and maintenance + financial education. Bilingual ES/EN intake, multi-select goals, deep audit of tri-bureau PDFs, prioritized dispute strategies, FCRA-grade dispute letters with personalized hardship narrative, and journey continuity across sessions via Cowork Memoria. Triple output per audit: technical forensic report (.md) + plain-language consumer summary (.md) + interactive single-file HTML dashboard rendered inline as an artifact (also saved to output/), with one-click PDF export that prints a dedicated report layout.",
+  "version": "3.6.0",
+  "description": "Credit-journey suite for US consumers (Latino focus). Covers the full arc: forensic repair when there are FCRA/FDCPA/Reg F anomalies, score optimization, and maintenance + financial education. Bilingual ES/EN intake, multi-select goals, deep audit of tri-bureau PDFs, prioritized dispute strategies, FCRA-grade dispute letters with personalized hardship narrative, and journey continuity across sessions via Cowork Memoria. Triple output per audit: technical forensic report (.md) + plain-language consumer summary (.md) + structured analysis delivered directly in the Cowork chat (executive summary, findings consolidated by type with friendly creditor names, prioritized action plan, dispute-letter offer). The interactive visual dashboard lives in the elitecredit.ai webapp.",
   "author": {
     "name": "Luis Cabrera"
   },

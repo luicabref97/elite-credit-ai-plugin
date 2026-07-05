@@ -140,7 +140,7 @@ To fetch a template, query the RAG with `category: LETTER_TEMPLATE` and the temp
 
 ## FURNISHER NAME & ORIGINAL-CREDITOR PROVENANCE (NON-NEGOTIABLE)
 
-**Letters ALWAYS use the RAW furnisher name exactly as it appears printed on the credit report** (e.g., "CB/VICSCRT", not "Comenity Bank / Victoria's Secret") — the bureau's ACDV matching keys on the printed string. Consumer-friendly names belong in the dashboard, never in the letter.
+**Letters ALWAYS use the RAW furnisher name exactly as it appears printed on the credit report** (e.g., "CB/VICSCRT", not "Comenity Bank / Victoria's Secret") — the bureau's ACDV matching keys on the printed string. Consumer-friendly names belong in the chat presentation and `consumer_dashboard.md`, never in the letter.
 
 **Letters ONLY cite `original_creditor` values that were printed on the report** (`original_creditor_source = None`, i.e. *reported*). Values the engine resolved itself — `"self"` (the entry IS the original creditor's own tradeline) or `"inferred"` (copied from the debt buyer's tradeline) — are presentation/strategy aids ("identificado por el análisis") and must NEVER be asserted in a letter as if the report printed them. Citing an inferred original creditor as printed fact hands the furnisher an easy "inaccurate dispute" rebuttal.
 

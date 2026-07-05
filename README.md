@@ -34,9 +34,9 @@ Upload a credit report PDF and get:
 - Credit-score education at an 8th-grade reading level — VantageScore 3.0/4.0 + FICO 8/9 aware
 - A `legal_disclaimer` plus a per-action prefix from the API — the agent always presents the audit as educational material, never as legal advice
 - **Three deliverables per audit:**
+  - A **structured analysis in the Cowork chat** — executive summary, findings consolidated by type with friendly creditor names, prioritized action plan as timeline buckets, and a dispute-letter offer. This is the consumer's main deliverable (format defined in `skills/ui-ux-credit/SKILL.md`). The interactive visual dashboard is exclusive to the elitecredit.ai webapp (v3.6.0, ADR-022).
   - `output/forensic_report.md` — technical report for credit-repair professionals
-  - `output/consumer_dashboard.md` — plain-language summary as text
-  - `output/dashboard/runtime.html` — **interactive bilingual HTML dashboard** the consumer opens in their browser. Score gauges, factor donut, account cards, anomaly explanations, action timeline, and a "Download PDF" button that produces a print-ready letter-sized PDF via the browser print dialog. Implementation lives in `skills/ui-ux-credit/dashboard/` and is described in `skills/ui-ux-credit/SKILL.md`.
+  - `output/consumer_dashboard.md` — plain-language summary as text; durable saved copy of the chat analysis
 
 ## Install
 
@@ -123,7 +123,7 @@ The API is wrapped as an MCP server. Each tool is callable from any agent or ski
 | `credit-law-rag` | 756-chunk legal RAG search across 13 categories. |
 | `credit-score-educator` | Score explanation with FICO 8/9 + VantageScore 3.0/4.0 nuances. |
 | `metro2-transformer` | Programmatic access to 11 Metro2 config files via `/api/config/{filename}`. |
-| `ui-ux-credit` | Brand design system for dashboards. |
+| `ui-ux-credit` | Consumer presentation layer: structured chat-response format, presentation golden rules, friendly creditor-name cascade, and the anomaly-title translation table. |
 
 ## What makes this a strategic system, not just a tool kit
 

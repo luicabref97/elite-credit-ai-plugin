@@ -28,8 +28,8 @@ You'll receive:
 
 - A friendly diagnosis with your score, what's going on with your credit, and what we found that needs attention.
 - Three outputs:
-  - An **interactive dashboard** (`output/dashboard/runtime.html`) you open in your browser — your scores, accounts, and issues visualized, with one-click PDF export. This is the main thing you'll actually look at.
-  - A **consumer summary** (`output/consumer_dashboard.md`) — same analysis in plain language, readable on its own.
+  - Your **full analysis right here in the chat** — executive summary of your scores, findings grouped by type with recognizable account names, and a prioritized week-by-week action plan. This is the main thing you'll actually read. (The interactive visual dashboard with score gauges and PDF export lives in the elitecredit.ai webapp.)
+  - A **consumer summary** (`output/consumer_dashboard.md`) — the same analysis saved as a plain-language file you can keep.
   - A **technical forensic report** (`output/forensic_report.md`) for credit-repair pros or for when you want depth.
 - A short interactive Q&A at the end where I ask you about each problematic account — letters you've received, calls, what happened, documents you may have. This makes the dispute letters far stronger. You can skip any question.
 - Your assigned flow + stage with a realistic timeline.
