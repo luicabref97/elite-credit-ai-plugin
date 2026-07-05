@@ -43,6 +43,9 @@ Extract ALL data from a US tri-bureau credit report PDF into a structured `Credi
 #### Core fields (20)
 `creditor_name`, `account_number`, `account_status`, `account_type`, `loan_type`, `creditor_classification`, `activity_designator`, `account_designator_code`, `date_opened`, `date_closed`, `balance`, `credit_limit`, `high_credit`, `monthly_payment`, `past_due`, `payment_status`, `date_last_activity`, `date_last_payment`, `date_reported`, `ecoa_code`
 
+#### Consumer label (NEW v3.5.1 — on both `CreditAccount` and `CollectionRecord`)
+`consumer_label` (Optional[str]) — the consumer-recognizable BRAND behind the furnisher, with NO account-type phrase: "Victoria's Secret" for Comenitybank/victori, "Bank of America" for BK OF AMER, "Children's Place" for CCB/CHLDPLCE, "Kohl's" for Kohls/capone. For collection agencies use the agency's common name ("Midland Credit Management"). If you do not recognize the brand with certainty, leave it null — NEVER guess or invent a brand. It feeds friendly display names in dashboards only; `creditor_name` stays RAW and dispute letters always use the RAW string.
+
 #### Date fields
 `date_opened`, `date_closed`, `date_reported`, `date_last_activity`, `date_last_payment`, `dofd` (Date of First Delinquency), `deferred_payment_start_date`
 
@@ -71,7 +74,7 @@ These are populated only when a previous-period report is also being parsed (see
 
 ### 6. Collections Section Fields (CollectionRecord)
 
-`agency_client`, `original_creditor`, `original_creditor_classification`, `date_reported`, `date_assigned`, `original_amount_owed`, `amount`, `status_date`, `balance_date`, `purge_date`, `account_designator_code`, `account_number`, `bureau`
+`agency_client`, `original_creditor`, `original_creditor_classification`, `consumer_label` (agency's common name, brand-only / null if uncertain — same rule as accounts), `date_reported`, `date_assigned`, `original_amount_owed`, `amount`, `status_date`, `balance_date`, `purge_date`, `account_designator_code`, `account_number`, `bureau`
 
 ### 7. Inquiries (InquiryRecord)
 `creditor`, `date`, `type` (hard / soft / promotional), `purpose`, `bureau`
@@ -126,6 +129,7 @@ When the user mentions or shows evidence of prior disputes / cease-and-desist le
 - NEVER fabricate data — if not visible, use null.
 - NEVER skip accounts — extract every tradeline.
 - NEVER confuse Balance with High Balance — different fields.
+- `consumer_label` is BRAND-ONLY (no type phrase) and null when not recognized with certainty — never invented. It never replaces `creditor_name` (RAW, what letters use).
 - `loan_type` ≠ `account_type`. `activity_designator` ≠ `account_status`.
 - `client_state` is mandatory for the audit engine to evaluate state-specific rules. If the report does not show a current address, ask the user which state they live in.
 - `previously_deleted` is a heuristic: only set it when the temporal merger detects a real gap. Do NOT set it manually during single-report parsing.

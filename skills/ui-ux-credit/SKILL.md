@@ -57,6 +57,18 @@ This replaces the old copy-the-folder flow. It is executed by the ORCHESTRATOR i
 3. **Original vs collector = ONE linked story.** When the same debt appears as the original creditor's charge-off AND a collector/debt-buyer entry, present them LINKED: the finding is the DOUBLE REPORTING, and the fix is the original showing $0/closed with its sold/transferred indicator. NEVER accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate" of itself. Use the linkage display fields (`linked_collector` / `linked_origin`) when present.
 4. **Consumer names in dashboards, RAW names in letters.** The dashboard shows understandable creditor names (e.g., "Comenity Bank / Victoria's Secret"); dispute letters ALWAYS use the raw furnisher name exactly as printed on the report (e.g., "CB/VICSCRT") — and only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred` ones.
 
+### Composing friendly creditor names (v3.5.1 — for `accounts[].creditor`, anomaly `affected[]`, `account_context` keys)
+
+Resolve each display name through this cascade — first hit wins:
+
+1. **`consumer_label` from the plugin's own extraction** (`CreditAccount` / `CollectionRecord`) — the brand alone ("Victoria's Secret", "Midland Credit Management"); the extractor leaves it null when unsure, so never invent one at this stage either.
+2. **Seed config `GET /api/config/furnisher_brands`** — match the RAW furnisher (lowercased) against its three maps in order: `abbreviations` (whole-name bank decodes: "bk of amer" → Bank of America), `brands` (brand tokens inside the string: "victori" → Victoria's Secret), `issuers` (private-label banks: "comenity" → Comenity (Bread Financial)). Keys ≤4 chars need word-boundary matching ("att" must never hit "attorney"). Served whitelisted alongside `debt_buyer_names`.
+3. **Honest generic** — "{Tipo} — {crudo}" / "{Type} — {raw}". Never a guessed brand.
+
+Compose with a type phrase per language derived from `loan_type` (first) then `account_type` — first substring hit wins, in this exact order (mirrors the API's `_TYPE_PHRASES`; note `unsecured` MUST match before `secured`): creditcard → "Tarjeta de crédito"/"credit card", chargeaccount / charge account → "Tarjeta de tienda"/"store card", automobile/auto → "Préstamo de auto"/"auto loan", lease → "Arrendamiento"/"lease", educational/student → "Préstamo estudiantil"/"student loan", unsecured → "Préstamo personal"/"personal loan", secured → "Tarjeta asegurada"/"secured card", mortgage → "Hipoteca"/"mortgage", collection → "Colección"/"collection", revolving → "Tarjeta de crédito"/"credit card", installment → "Préstamo"/"loan"; fallback "Cuenta"/"account". Then: ES = "{Tipo} {Marca}", EN = "{Brand} {type}".
+
+Notes: the webapp adds a curated `creditor_master` tier (Supabase) ABOVE all of these — the plugin has no access to it, so its cascade starts at `consumer_label`. And golden rule 4 always applies: friendly names in dashboards; the RAW furnisher string is always preserved ("como aparece en tu reporte") and dispute letters ALWAYS use the RAW.
+
 **Verification (matches `credit-forensic-analyst` Step 8 gate):** `output/dashboard.html` exists, AUDIT_DATA contains the consumer's real data (not the Carly sample), and the artifact was emitted (or path communicated in Claude Code).
 
 **Fallback** if the template file cannot be read (sandbox restriction): do NOT fail silently. Deliver `consumer_dashboard.md` as the text fallback, paste the populated `AUDIT_DATA` block in chat, and tell the user the visual dashboard needs an environment with plugin-file access.

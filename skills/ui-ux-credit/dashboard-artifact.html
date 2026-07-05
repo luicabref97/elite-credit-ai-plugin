@@ -235,6 +235,8 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 
 <script>
 // ===== AUDIT_DATA START — agents: replace EVERYTHING between START and END with the consumer's data (same shape; see skills/ui-ux-credit/SKILL.md data contract). Sample below = real Carly Tarazona audit. =====
+// Creditor display names (v3.5.1): cascade = extractor consumer_label (brand-only; null when uncertain) → GET /api/config/furnisher_brands (abbreviations → brands → issuers) → honest generic "{Tipo} — {crudo}"; type phrase per language from loan_type/account_type.
+// Friendly names here in the dashboard ONLY — dispute letters always use the RAW furnisher string exactly as printed on the report.
 const AUDIT_DATA = {
   user:{ first_name:"Carly", last_name:"Tarazona", audit_date:"2026-03-18", ssn_last4:"2012" },
   routing:{ flow:"A", phase_name_es:"Reparación · Etapa 1 (Preparación)", phase_name_en:"Repair · Stage 1 (Prep)" },

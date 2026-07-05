@@ -115,6 +115,7 @@ Read the template `skills/ui-ux-credit/dashboard-artifact.html`, swap ONLY the `
 2. **NEVER present missing-DOFD and re-aging as separate findings on the SAME account** — the re-aging card absorbs the angle (the API assembler already does this for the dashboard; mirror it when assembling manually). Accounts whose first-delinquency date appears in a remark also leave the missing-DOFD card.
 3. **Original vs collector are LINKED, not duplicated**: present the original creditor's tradeline as needing to show $0/closed and frame the finding as the DOUBLE REPORTING. Never accuse the original creditor's own entry (`original_creditor_source = "self"`) of being a "duplicate".
 4. **Consumer-understandable creditor names in dashboards; RAW furnisher names (exactly as printed on the report) in dispute letters** — and letters only cite `original_creditor` values that were printed on the report (`source = None`), never `self`/`inferred`.
+   Compose friendly names via the cascade in `skills/ui-ux-credit/SKILL.md`: extractor `consumer_label` (brand-only; null when uncertain — never invent) → `GET /api/config/furnisher_brands` seed (abbreviations → brands → issuers) → honest generic "{Tipo} — {crudo}", with the type phrase per language from `loan_type`/`account_type`.
 
 **Step 7 — Post-audit context interview**
 
